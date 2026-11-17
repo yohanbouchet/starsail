@@ -206,6 +206,41 @@ reviennent aux Dev par e-mail (F7).
 
 ### 3.3 Analyse des workflows Dev et Ops
 
+**Passages de relais entre équipes**
+
+| Échange | Sens | Canal | Source |
+|---|---|---|---|
+| Tag de l'image et procédure de déploiement | Dev → Ops | e-mail | p. 3 ; questionnaire Ops p. 7 |
+| Bugs ou questions sur la procédure de déploiement | Ops → Dev | e-mail | questionnaires Dev p. 5 et Ops p. 7 |
+| Erreurs HTTP 5xx constatées en production | Ops → Dev | e-mail | questionnaire Ops p. 7 |
+| Alertes de sécurité (CVE dans l'image en production) | Ops → Dev | e-mail | p. 3 ; questionnaires Dev p. 5 et Ops p. 7 |
+| Date de mise en production | Ops ↔ client | non précisé | questionnaire Ops p. 7 |
+| Notification de mise en production | Ops → client et Dev | e-mail | questionnaire Ops p. 7 |
+
+Les équipes Dev et Ops citent les trois mêmes types d'échanges : bugs liés
+au déploiement, anomalies après la mise en production et alertes de
+sécurité. Elles s'accordent donc sur les difficultés. Ces retours passent
+par e-mail, « souvent avec retard » (p. 3).
+
+**Tâches manuelles ou réalisées deux fois**
+
+- Les tests sont menés deux fois à la main : d'abord par le client et
+  les Dev sur l'environnement de démonstration, puis par les Ops en
+  préproduction.
+- La procédure de déploiement est rédigée par les Dev, puis rejouée pas
+  à pas par les Ops.
+- Le tag de l'image est recopié à la main dans un e-mail.
+
+**Aspects humains**
+
+- Le problème de nommage des images est signalé par les Ops dans une
+  question réservée aux Dev, avec cette remarque : « Je ne sais pas si les
+  développeurs en ont discuté » (questionnaire Ops, p. 6).
+- Les savoirs reposent sur peu de personnes : le Lead Ops est le seul
+  spécialiste des scripts Bash et d'Ansible, l'automatisation côté Dev
+  est confiée au stagiaire, et un seul Ops assure la sécurité et la
+  supervision.
+
 ## 4. Analyse SWOT
 
 ### 4.1 Forces
