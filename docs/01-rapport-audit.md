@@ -137,6 +137,73 @@ niveau déclaré dans les questionnaires et l'état de leur fin de support
 
 ### 3.2 Processus de développement et déploiement
 
+```mermaid
+---
+config:
+  flowchart:
+    wrappingWidth: 200
+    nodeSpacing: 30
+    rankSpacing: 70
+    subGraphTitleMargin:
+      top: 8
+      bottom: 14
+---
+flowchart TB
+  subgraph CLIENT["Client"]
+    direction LR
+    C1["Priorise les évolutions"] ~~~ C2["Teste la démonstration avec les Dev"]
+  end
+  subgraph DEV["Équipe Dev"]
+    direction LR
+    D1["Développement et tests unitaires<br/><i>Docker Compose, PHPUnit, Jest</i>"]
+    D2["Livraison de démonstration<br/><i>environnement de démonstration</i>"]
+    D3["F1 · Construction de l'image sur le poste<br/><i>Docker</i>"]
+    D4["F2 · Envoi au registre et procédure écrite<br/><i>registre interne</i>"]
+    D1 --> D2 --> D3 --> D4
+  end
+  subgraph OPS["Équipe Ops"]
+    direction LR
+    O1["F4 · Analyse de l'image<br/><i>Trivy</i>"]
+    O2["F5 · Préproduction et tests de la procédure<br/><i>Ansible, Bash</i>"]
+    O3["F6 · Mise en production, accès coupé<br/><i>Ansible, Bash</i>"]
+    O4["Supervision<br/><i>journaux, métriques HTTP</i>"]
+    O1 --> O2 -->|date fixée avec le client| O3 --> O4
+  end
+  CLIENT <-->|"évolutions, campagne de test"| DEV
+  DEV ==>|"F3 · e-mail : tag et procédure"| OPS
+  OPS -.->|"F7 · e-mail : bugs, erreurs 5xx, CVE"| DEV
+
+  classDef manuel fill:#ffe0b2,stroke:#e65100,color:#000
+  classDef friction fill:#ffcdd2,stroke:#b71c1c,stroke-width:3px,color:#000
+  classDef neutre fill:#eeeeee,stroke:#616161,color:#000
+  class D1,D2,D4,O1,O2,O4 manuel
+  class D3,O3 friction
+  class C1,C2 neutre
+  linkStyle 8,9 stroke:#b71c1c,stroke-width:3px
+```
+
+*Figure 1 – Pipeline actuel de StarMap (AS-IS).*
+
+| Repère | Signification |
+|---|---|
+| Orange | Étape manuelle |
+| Rouge (cadre épais) | Étape manuelle et point de friction majeur |
+| Flèche rouge | Passage de relais par e-mail entre Dev et Ops |
+| Gris | Intervention du client |
+| F1 à F7 | Points de friction, repris dans les sections 4 à 6 |
+
+Une évolution suit le chemin suivant. Le client priorise les évolutions
+avec l'équipe Dev, qui développe et lance les tests unitaires sur ses
+postes, puis livre une démonstration testée avec le client. L'image
+Docker est ensuite construite sur le poste d'un développeur (F1), envoyée
+au registre interne et accompagnée d'une procédure écrite (F2). Le tag de
+l'image et la procédure sont transmis aux Ops par e-mail (F3). Les Ops
+analysent l'image avec Trivy (F4), la déploient en préproduction et
+rejouent les tests de la procédure (F5), puis fixent une date avec le
+client et mettent en production en coupant l'accès (F6). Les anomalies
+détectées par la supervision, les bugs et les alertes de sécurité
+reviennent aux Dev par e-mail (F7).
+
 ### 3.3 Analyse des workflows Dev et Ops
 
 ## 4. Analyse SWOT
