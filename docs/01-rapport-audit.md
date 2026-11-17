@@ -4,6 +4,11 @@ Amélioration des pratiques DevOps — Projet StarMap
 
 > Statut : à rédiger (structure du modèle fourni par StarSail).
 
+## Synthèse
+
+<!-- À rédiger en dernier : 4 constats et 4 recommandations triées par
+priorité, une demi-page. -->
+
 ## 1. Introduction et contexte
 
 ### 1.1 Présentation de l'entreprise
@@ -100,12 +105,35 @@ l'OWASP Top 10 (risques des applications web) et l'OWASP Top 10 des
 risques CI/CD (risques des chaînes d'intégration et de déploiement).
 
 Une IA (Claude, d'Anthropic) a été utilisée comme assistant pour relire
-les documents, proposer des formulations et vérifier la cohérence. L'analyse, les choix et le
-contenu final ont été décidés par l'auditeur.
+les documents, proposer des formulations et vérifier la cohérence.
+L'analyse, les choix et le contenu final ont été décidés par l'auditeur.
 
 ## 3. État des lieux technique
 
 ### 3.1 Infrastructure et stack technologique
+
+StarMap est hébergé sur deux serveurs Debian, l'un de test et
+préproduction, l'autre de production, auxquels s'ajoutent les postes des
+développeurs. Les images Docker sont stockées dans un registre interne
+partagé et analysées avec Trivy avant chaque déploiement.
+
+Le tableau suivant reprend les technologies citées par les équipes, leur
+niveau déclaré dans les questionnaires et l'état de leur fin de support
+(source : endoflife.date, consulté le 17/11/2026).
+
+| Technologie | Équipe | Niveau déclaré | Version documentée | Fin de support |
+|---|---|---|---|---|
+| PHP / Symfony | Dev | Très bon | « PHP 8 » ; Symfony non précisé | PHP 8.0 et 8.1 terminés ; 8.2 jusqu'au 31/12/2026 ; 8.3 à 8.5 maintenus |
+| TypeScript / Stimulus | Dev | Bon | non précisée | — |
+| Composer / NPM | Dev | Bon | non précisée | Node.js 22, 24 et 26 maintenus |
+| PHPUnit / Jest | Dev | Très bon / Moyen | non précisée | — |
+| Docker Compose / Docker | Dev / Ops | Moyen / Bon | non précisée | Docker Engine 29 maintenu ; 25.0 jusqu'au 04/12/2026 |
+| PostgreSQL | Dev et Ops | Moyen | non précisée | 14 terminé le 12/11/2026 ; 15 à 18 maintenus |
+| Debian | Ops | Bon | « stable » | 13 (stable) maintenue ; 12 en support étendu jusqu'au 30/06/2028 |
+| Bash / Ansible | Ops | Très bon / Bon | non précisée | — |
+| TestInfra / BashUnit | Ops | Bon | non précisée | — |
+| Trivy | Ops | non indiqué | non précisée | — |
+| Git, VS Code | Dev | non indiqué | — | — |
 
 ### 3.2 Processus de développement et déploiement
 
