@@ -60,7 +60,48 @@ les processus internes du client.
 
 ### 2.1 Sources d'information
 
+- Le document « Projet StarMap – Équipes et processus DevOps actuels » :
+  présentation de l'entreprise et de l'infrastructure, questionnaires des
+  équipes Dev et Ops, schéma d'infrastructure, frise du cycle DevOps et
+  schéma des échanges entre le client, les Dev et les Ops (étapes E1 à
+  E14).
+- La demande de la Responsable Qualité et Amélioration Continue et les
+  modèles de rapport fournis.
+- Pour la veille : documentations officielles des outils, comparatifs,
+  retours d'expérience publiés et dates de fin de support
+  (endoflife.date).
+- L'expérience de l'auditeur sur des projets antérieurs : analyse des
+  images avec Trivy, contrôle des Dockerfile avec Hadolint, audit des
+  dépendances, tests de bout en bout avec Cypress et tests de charge avec
+  k6 ; puis chaîne CI/CD sous GitHub Actions avec SonarQube, Trivy,
+  Gitleaks, Dependabot et mesure des indicateurs DORA.
+
 ### 2.2 Démarche d'analyse
+
+L'audit a suivi cinq étapes :
+
+1. Analyse des documents et définition du périmètre.
+2. Cartographie du pipeline actuel (diagramme AS-IS).
+3. Analyse SWOT, puis priorisation des constats selon leur impact sur la
+   qualité, la sécurité et les délais.
+4. Veille technologique ciblée sur les besoins identifiés.
+5. Formulation de recommandations stratégiques.
+
+Deux règles ont été appliquées tout au long de l'audit :
+
+- **Règle de preuve** : chaque constat cite le document et la page dont
+  il provient ; ce qui n'est pas documenté est présenté comme une
+  hypothèse.
+- **Traçabilité** : chaque point de friction reçoit un numéro (F1, F2…)
+  repris dans l'analyse SWOT, les constats et les recommandations.
+
+Les risques de sécurité sont analysés à l'aide de référentiels publics :
+l'OWASP Top 10 (risques des applications web) et l'OWASP Top 10 des
+risques CI/CD (risques des chaînes d'intégration et de déploiement).
+
+Une IA (Claude, d'Anthropic) a été utilisée comme assistant pour relire
+les documents, proposer des formulations et vérifier la cohérence. L'analyse, les choix et le
+contenu final ont été décidés par l'auditeur.
 
 ## 3. État des lieux technique
 
