@@ -1,8 +1,20 @@
 # Tableau de veille technologique
 
-> Statut : à construire (étape 4 de l'exercice 1).
+Livrable 2 du projet : [`tableau-de-veille.xlsx`](tableau-de-veille.xlsx),
+annexe A du rapport d'audit.
 
-Le tableau (XLSX) comparera au moins 10 outils sur les critères de
-l'énoncé : compatibilité avec la stack de StarSail, coût, licence,
-maturité, courbe d'apprentissage, communauté, effort d'adoption, avec une
-source datée pour chaque ligne.
+- **39 outils** comparés, répartis en 9 catégories : CI/CD, déploiement et
+  IaC, GitOps, tests, qualité du code, sécurité, supervision et alertes,
+  sauvegarde, supervision du modèle d'IA.
+- **Critères** : besoin couvert (P1 à P4 du rapport), rôle pour StarSail,
+  licence, coût, dernière version, maturité, communauté, compatibilité
+  avec la stack, courbe d'apprentissage, effort d'adoption, avantages et
+  inconvénients pour StarSail, retour d'expérience, verdict, sources.
+- **Verdicts** : 21 retenus, 2 en option, 7 en évolution, 9 écartés avec
+  leur raison.
+- **Sources** consultées le 18/11/2026 : documentations officielles, pages
+  de prix des éditeurs, API GitHub, endoflife.date. Prix convertis en
+  euros au taux de la BCE du 17/11/2026.
+
+La feuille « Méthode et légende » explique chaque critère, chaque verdict
+et les familles de licences.
