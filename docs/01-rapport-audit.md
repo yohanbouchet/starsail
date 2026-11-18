@@ -2,6 +2,10 @@
 
 Amélioration des pratiques DevOps — Projet StarMap
 
+Yohan Bouchet, Responsable DevOps · novembre 2026
+
+<!-- sommaire : inséré à cet endroit par le générateur de PDF -->
+
 ## Synthèse
 
 StarSail dispose d'un socle sain (conteneurs, Ansible, préproduction
@@ -88,7 +92,11 @@ les processus internes du client.
   images avec Trivy, contrôle des Dockerfile avec Hadolint, audit des
   dépendances, tests de bout en bout avec Cypress et tests de charge avec
   k6 ; puis chaîne CI/CD sous GitHub Actions avec SonarQube, Trivy,
-  Gitleaks, Dependabot et mesure des indicateurs DORA.
+  Gitleaks, Dependabot, zizmor et actionlint, mesure des indicateurs
+  DORA, plan de reprise et rôles Ansible. Les limites relevées sur ces
+  projets (charge générée depuis un seul poste, restauration mesurée sur
+  un petit volume, rôles non tous testés) sont prises en compte dans les
+  recommandations.
 
 ### 2.2 Démarche d'analyse
 
@@ -106,8 +114,16 @@ Deux règles ont été appliquées tout au long de l'audit :
 - **Règle de preuve** : chaque constat cite le document et la page dont
   il provient ; ce qui n'est pas documenté est présenté comme une
   hypothèse.
-- **Traçabilité** : chaque point de friction reçoit un numéro (F1, F2…)
-  repris dans l'analyse SWOT, les constats et les recommandations.
+- **Traçabilité** : les points de friction (F1 à F7), les points du
+  SWOT (S, W, O, T), les problématiques (P1 à P4) et les axes (A1 à A5)
+  sont numérotés ; chaque recommandation renvoie aux constats qu'elle
+  traite.
+
+**Limites de l'audit.** L'audit repose sur les documents fournis, sans
+entretien ni accès aux systèmes. Les versions exactes, les mesures
+(durées, fréquences, incidents), l'hébergement, les secrets et les
+sauvegardes n'ont donc pas pu être vérifiés : ils sont signalés comme
+hypothèses ou points à vérifier.
 
 Les risques de sécurité sont analysés à l'aide de référentiels publics :
 l'OWASP Top 10 (risques des applications web) et l'OWASP Top 10 des
@@ -300,7 +316,7 @@ Les faiblesses sont détaillées et classées dans la section 5.
 - **W7** : aucune preuve de SAST, de SCA, de signature des images ni de
   gestion des secrets ; les Dev envoient eux-mêmes leurs images dans le
   registre (schéma p. 8).
-- **W8** : versions non inventoriées (« PHP 8 », « Debian stable »,
+- **W8** : versions non inventoriées (« PHP 8 », « Debian (stable) »,
   PostgreSQL et Symfony sans numéro), fins de support invérifiables.
 - **W9** : deux Ops ; l'automatisation côté Dev est confiée au stagiaire
   (Dev p. 4, Ops p. 6).
@@ -380,8 +396,8 @@ qu'aucun élément fourni ne permet de vérifier.
 | Droits sur le registre : les développeurs y envoient eux-mêmes leurs images | indice (schéma p. 8) | moyen |
 | Perte de données ou arrêt prolongé du service | constaté pour le serveur unique (p. 2) ; non prouvé pour la sauvegarde | élevé |
 
-Ces constats sont regroupés en quatre problématiques, présentées par
-ordre de priorité.
+Ces constats sont regroupés en quatre problématiques, P1 à P4,
+présentées par ordre de priorité.
 
 ### 5.1 Problématique 1 – Les failles de sécurité sont découvertes trop tard et ne sont pas suivies
 
@@ -439,7 +455,7 @@ production. Délais : les tests doublés et la planification de chaque
 mise en production allongent la livraison. Disponibilité : chaque mise en
 production interrompt le service.
 
-**Besoin.** Des tests rejoués automatiquement à chaque modification, et
+**Besoin.** Des tests rejoués automatiquement à chaque modification et
 une mise en production reproductible, sans interruption de service.
 
 ### 5.4 Problématique 4 – Les retours passent par e-mail et les savoirs reposent sur peu de personnes
@@ -560,9 +576,9 @@ les rôles Ansible viennent de retours d'expérience (section 2.1).
 **A4 – Remplacer les e-mails par des alertes et des tickets automatiques**
 
 - **VictoriaMetrics, Grafana et Alertmanager** déclenchent les alertes,
-  avec ou à la place de l'outil actuel, non nommé (p. 8) ; **GlitchTip**
-  regroupe les erreurs de l'application ; **Uptime Kuma** vérifie la
-  disponibilité depuis l'extérieur.
+  en complément de l'outil actuel, non nommé (p. 8), ou à sa place ;
+  **GlitchTip** regroupe les erreurs de l'application ; **Uptime Kuma**
+  vérifie la disponibilité depuis l'extérieur.
 - Chaque alerte part par e-mail, en notification sur téléphone et
   ordinateur (**ntfy**) et en ticket **Jira**, avec le lien vers sa
   procédure (A5) ; **PagerDuty** est une option en cas d'astreinte. Les
@@ -599,7 +615,7 @@ CI/CD :
 | Risque OWASP Top 10 CI/CD | Constat chez StarSail | Réponse |
 |---|---|---|
 | CICD-SEC-1 · contrôle du flux | Contrôles manuels, non imposés (W4, W6) | Branche protégée et relue (A3) |
-| CICD-SEC-2 · identités et accès | Les Dev envoient leurs images (W7) | Seule la chaîne écrit au registre (A2) |
+| CICD-SEC-2 · identités et accès | Les Dev envoient leurs images (W7) | Seule la chaîne écrit dans le registre (A2) |
 | CICD-SEC-3 · dépendances | Non contrôlées (W7), Trivy piégé (T3) | Dependabot, outils figés (A1) |
 | CICD-SEC-6 · secrets | Gestion non prouvée (W7) | Gitleaks, secrets chiffrés (A1) |
 | CICD-SEC-8 · services tiers | Nouveaux services (GitHub, Jira) | Comptes nominatifs, droits minimaux (A1) |
