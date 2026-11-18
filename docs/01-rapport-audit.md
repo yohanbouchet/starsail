@@ -244,11 +244,10 @@ par e-mail, « souvent avec retard » (p. 3).
 
 ## 4. Analyse SWOT
 
-La matrice croise ce qui dépend de StarSail (forces et faiblesses) et ce
-qui vient de son environnement (opportunités et menaces). Chaque point est
-numéroté et renvoie, quand il y a lieu, aux points de friction F1 à F7 de
-la figure 1. Les risques de sécurité figurent dans les faiblesses et les
-menaces.
+La matrice croise ce qui dépend de StarSail (forces, faiblesses) et ce
+qui vient de son environnement (opportunités, menaces). Les points sont
+numérotés et renvoient aux points de friction F1 à F7 de la figure 1 ;
+les risques de sécurité figurent dans les faiblesses et les menaces.
 
 | | Utile | Nuisible |
 |---|---|---|
@@ -261,92 +260,79 @@ menaces.
 
 - **S1** : l'application est livrée en images Docker, stockées dans un
   registre interne partagé (p. 2).
-- **S2** : les Ops testent chaque version sur un environnement
-  « iso-production » avant la production (questionnaire Ops, p. 7).
-- **S3** : chaque image est analysée avec Trivy avant d'être déployée
+- **S2** : chaque version est testée sur un environnement
+  « iso-production » (questionnaire Ops, p. 7).
+- **S3** : chaque image est analysée avec Trivy avant son déploiement
   (p. 3).
-- **S4** : l'infrastructure est déjà décrite avec Ansible, et les Ops
-  maîtrisent des outils de test d'infrastructure, TestInfra et BashUnit
-  (questionnaire Ops, p. 6).
-- **S5** : l'équipe Dev déclare un très bon niveau en PHP/Symfony et en
-  PHPUnit (questionnaire Dev, p. 4).
-- **S6** : les équipes travaillent de manière coordonnée (p. 3), le
-  client voit une démonstration à mi-itération (questionnaire Dev, p. 5),
-  et chaque équipe propose elle-même des outils (Cypress, Redis,
-  Kubernetes).
-- **S7** : la production est supervisée (journaux et métriques HTTP) et
-  les erreurs 5xx sont détectées (schéma p. 8, questionnaire Ops p. 7).
+- **S4** : l'infrastructure est décrite avec Ansible, et les Ops
+  maîtrisent TestInfra et BashUnit (questionnaire Ops, p. 6).
+- **S5** : très bon niveau déclaré en PHP/Symfony et PHPUnit
+  (questionnaire Dev, p. 4).
+- **S6** : équipes coordonnées (p. 3), démonstration au client à
+  mi-itération (Dev p. 5), outils proposés par les équipes elles-mêmes.
+- **S7** : la production est supervisée et les erreurs 5xx sont
+  détectées (schéma p. 8, Ops p. 7).
 
 ### 4.2 Faiblesses
 
-- **W1** : les images sont construites sur les postes des développeurs,
-  sans chaîne d'intégration continue (p. 3) ; leur contenu dépend donc du
-  poste qui les a produites.
-- **W2** : le nommage (tag) des images « n'est pas toujours respecté »,
-  ce qui « peut provoquer des incompréhensions et donc des erreurs au
-  moment du déploiement » (questionnaire Ops, p. 6-7).
-- **W3** : le travail et les retours (bugs, alertes de sécurité, erreurs)
-  circulent par e-mail, « souvent avec retard » (p. 3) ; StarSail juge
-  elle-même la communication Dev/Ops « perfectible » (p. 2).
-- **W4** : les tests sont qualifiés de « partiels » (p. 2), lancés à la
-  main et refaits deux fois (questionnaires Dev p. 5 et Ops p. 7) ; le
-  niveau déclaré en Jest est « moyen » (p. 4).
-- **W5** : les résultats de Trivy ne sont pas suivis dans un outil (p. 3),
-  et des CVE sont signalées dans l'image en production (questionnaires Dev
-  p. 5 et Ops p. 7).
-- **W6** : la mise en production est manuelle et coupe l'accès à
-  l'application pendant l'opération (questionnaire Ops, p. 7).
-- **W7** : aucun élément fourni ne montre d'analyse du code (SAST), des
-  dépendances Composer et NPM (SCA), de signature des images ni de
-  gestion des secrets ; les développeurs envoient eux-mêmes leurs images
-  dans le registre partagé (schéma p. 8).
-- **W8** : les versions ne sont pas inventoriées (« PHP 8 », « Debian
-  stable », PostgreSQL et Symfony sans numéro), ce qui empêche de vérifier
-  leur fin de support (section 3.1).
-- **W9** : l'équipe Ops compte deux personnes, et l'automatisation côté
-  Dev est confiée au stagiaire (questionnaires Dev p. 4 et Ops p. 6).
-- **W10** : aucun élément fourni ne décrit de sauvegarde ni de
-  restauration de la base PostgreSQL, et la production dispose d'un seul
-  serveur (p. 2).
+Les faiblesses sont détaillées et classées dans la section 5.
+
+- **W1** : images construites sur les postes, sans intégration continue
+  (p. 3).
+- **W2** : nommage des images « pas toujours respecté », ce qui « peut
+  provoquer » des erreurs de déploiement (Ops p. 6-7).
+- **W3** : travail et retours par e-mail, « souvent avec retard » (p. 3) ;
+  communication Dev/Ops jugée « perfectible » (p. 2).
+- **W4** : tests « partiels » (p. 2), lancés à la main et refaits deux
+  fois (Dev p. 5, Ops p. 7).
+- **W5** : résultats de Trivy non suivis (p. 3) ; CVE signalées dans
+  l'image en production (Dev p. 5, Ops p. 7).
+- **W6** : mise en production manuelle, avec coupure d'accès (Ops p. 7).
+- **W7** : aucune preuve de SAST, de SCA, de signature des images ni de
+  gestion des secrets ; les Dev envoient eux-mêmes leurs images dans le
+  registre (schéma p. 8).
+- **W8** : versions non inventoriées (« PHP 8 », « Debian stable »,
+  PostgreSQL et Symfony sans numéro), fins de support invérifiables.
+- **W9** : deux Ops ; l'automatisation côté Dev est confiée au stagiaire
+  (Dev p. 4, Ops p. 6).
+- **W10** : aucune sauvegarde décrite ; un seul serveur de production
+  (p. 2).
 
 ### 4.3 Opportunités
 
-- **O1** : Docker, Ansible et le registre existent déjà ; l'automatisation
-  peut s'appuyer sur ce socle au lieu de le remplacer.
+- **O1** : le socle existe (Docker, Ansible, registre) : automatiser
+  sans le remplacer.
 - **O2** : de nombreux outils de CI/CD, de test et de sécurité sont
-  gratuits ou open source, adaptés à une petite équipe (comparés en
-  annexe A).
-- **O3** : les pratiques DevSecOps intègrent les contrôles de sécurité dès
-  le début de la chaîne, et les indicateurs DORA permettent de mesurer
-  les progrès de la livraison.
-- **O4** : les alertes peuvent déclencher des notifications (téléphone,
-  messagerie) et créer des tickets automatiquement, à la place des
-  e-mails.
-- **O5** : les équipes demandent déjà des outils d'automatisation : tests
-  de bout en bout avec Cypress côté Dev, orchestration avec Kubernetes
-  côté Ops (questionnaires Dev p. 5 et Ops p. 7).
+  gratuits ou open source, adaptés à une petite équipe (annexe A).
+- **O3** : les pratiques DevSecOps placent la sécurité dès le début de la
+  chaîne, et les indicateurs DORA mesurent les progrès de la livraison.
+- **O4** : les alertes peuvent devenir des notifications et des tickets
+  automatiques, à la place des e-mails.
+- **O5** : les équipes demandent déjà de l'automatisation : Cypress côté
+  Dev, Kubernetes côté Ops (Dev p. 5, Ops p. 7).
 
 ### 4.4 Menaces
 
-- **T1** : des CVE étant déjà présentes en production, une faille connue
-  peut y être exploitée avant d'être corrigée.
-- **T2** : une brique non inventoriée peut avoir atteint sa fin de
-  support sans que l'équipe le sache : par exemple, PHP 8.2 n'est plus
-  maintenu après le 31/12/2026, et PostgreSQL 14 ne l'est plus depuis le
+- **T1** : une CVE déjà présente en production peut être exploitée avant
+  d'être corrigée.
+- **T2** : une brique non inventoriée peut être en fin de support : PHP
+  8.2 n'est plus maintenu après le 31/12/2026, PostgreSQL 14 depuis le
   12/11/2026 (endoflife.date, consulté le 17/11/2026).
-- **T3** : les outils de la chaîne peuvent eux-mêmes être compromis : en
-  mars 2026, des versions piégées de Trivy ont volé les secrets de
-  chaînes CI (CVE-2026-33634). Ce risque correspond à la catégorie A03 de
-  l'OWASP Top 10:2025, « défaillances de la chaîne d'approvisionnement
-  logicielle ».
-- **T4** : un tag erroné peut conduire à déployer une mauvaise version en
-  production.
-- **T5** : le départ du stagiaire ou d'un des deux Ops ferait perdre une
-  partie des savoirs nécessaires aux livraisons.
+- **T3** : les outils de la chaîne peuvent être compromis : en mars 2026,
+  des versions piégées de Trivy ont volé des secrets de chaînes CI
+  (CVE-2026-33634), risque A03 de l'OWASP Top 10:2025.
+- **T4** : un tag erroné peut faire déployer une mauvaise version.
+- **T5** : le départ du stagiaire ou d'un Ops ferait perdre des savoirs
+  nécessaires aux livraisons.
 - **T6** : des livraisons lentes et des coupures de service réduisent la
-  réactivité de StarSail face à ses concurrents.
+  réactivité face aux concurrents.
 - **T7** : la perte du serveur de production arrêterait le service ;
   sans sauvegarde testée, des données pourraient être perdues.
+
+**En résumé**, StarSail dispose d'un socle solide (conteneurs, Ansible,
+préproduction identique à la production), mais les étapes qui relient
+le code à la production restent manuelles et peu tracées, et la reprise
+après une panne n'est pas décrite.
 
 ## 5. Constats et besoins identifiés
 
