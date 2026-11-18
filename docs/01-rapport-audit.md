@@ -475,31 +475,30 @@ Les constats suivants sont secondaires :
 
 ## 6. Recommandations stratégiques
 
-Les cinq axes répondent aux besoins de la section 5. Les solutions
-citées sont retenues par la veille ou proposées en option ; l'annexe A
-détaille alternatives, coûts et sources. L'architecture, la
-configuration et la migration relèvent des spécifications techniques.
+Les cinq axes répondent aux besoins de la section 5 ; l'annexe A
+détaille les alternatives, les coûts et les sources. L'architecture et
+la migration relèvent des spécifications techniques.
 
 ### 6.1 Axes d'amélioration prioritaires
 
-La colonne « Appuis » applique la matrice TOWS (Weihrich, 1982), qui
-croise les cases du SWOT : chaque axe s'appuie sur des forces (S) et des
-opportunités (O) pour réduire des faiblesses (W) et des menaces (T).
+La colonne « Appuis » applique la matrice TOWS (Weihrich, 1982) : chaque
+axe s'appuie sur des forces (S) et des opportunités (O) pour réduire des
+faiblesses (W) et des menaces (T).
 
 | Priorité | Axe | Répond à | Appuis | Impact attendu |
 |---|---|---|---|---|
-| 1 | **A1** Intégrer la sécurité dans la chaîne | P1 : W5, W7, W8 ; T1, T2, T3 | S3, O2, O3 | Failles détectées avant la production et suivies jusqu'à leur correction |
-| 2 | **A2** Automatiser la construction et l'identification des images | P2 : W1, W2 ; T4 | S1, O1 | Aucune image construite sur un poste, aucun déploiement d'une mauvaise version |
+| 1 | **A1** Intégrer la sécurité dans la chaîne | P1 : W5, W7, W8 ; T1, T2, T3 | S3, O2, O3 | Failles détectées avant la production, suivies jusqu'à correction |
+| 2 | **A2** Automatiser la construction et l'identification des images | P2 : W1, W2 ; T4 | S1, O1 | Plus d'image construite sur un poste ni de mauvaise version déployée |
 | 3 | **A3** Automatiser les tests et la mise en production | P3 : W4, W6 ; T6 | S2, S4, S5, O5 | Tests rejoués à chaque modification, mise en production sans coupure |
-| 4 | **A4** Remplacer les e-mails par des alertes et des tickets | P4 : W3 | S7, O4 | Chaque alerte et chaque retour arrivent à la bonne personne, tracés |
+| 4 | **A4** Remplacer les e-mails par des alertes et des tickets | P4 : W3 | S7, O4 | Alertes et retours tracés, reçus par la bonne personne |
 | 5 | **A5** Garantir la reprise d'activité et partager les savoirs | P4 : W9 ; T5 ; W10, T7 | S2, S4 | Données restaurables dans un délai connu, savoirs écrits |
 
 **Priorité et ordre de démarrage.** La priorité suit le niveau des
-constats de la section 5. L'ordre de démarrage suit les dépendances : A2
+constats (section 5) ; l'ordre de démarrage suit les dépendances. A2
 commence en premier, car les contrôles de A1 et les tests de A3
 s'exécutent dans la chaîne qu'il crée. La vérification des sauvegardes
-existantes (A5) est menée dès le début : elle ne dépend d'aucun autre
-axe, et W10 est de niveau élevé.
+existantes (A5) commence aussi dès le début : elle ne dépend de rien, et
+W10 est de niveau élevé.
 
 ### 6.2 Solutions proposées par axe
 
@@ -532,115 +531,101 @@ avec un compte nominatif sur chaque service.
 
 | Famille de tests | Solution | Moment |
 |---|---|---|
-| Unitaires, intégration | PHPUnit, Jest | Chaque modification |
-| Analyse statique | PHPStan, Semgrep, ShellCheck | Chaque modification |
+| Unitaires, intégration, analyse statique | PHPUnit, Jest, PHPStan, Semgrep, ShellCheck | Chaque modification |
 | Infrastructure | Molecule et TestInfra, sur tous les rôles Ansible | Chaque modification de l'infrastructure |
-| Bout en bout | Cypress | Préproduction |
-| Sécurité de l'application en fonctionnement | ZAP | Préproduction |
+| Bout en bout, sécurité en fonctionnement | Cypress, ZAP | Préproduction |
 | Charge | k6, depuis une autre machine que celle testée | Avant une version importante |
 | Après déploiement | Test de fumée par Ansible, Uptime Kuma | Chaque mise en production |
 | Restauration | pgBackRest, sur un volume représentatif | Régulièrement (A5) |
 
 La chaîne met en production avec Ansible, sans coupure : la nouvelle
-version démarre à côté de l'ancienne, et le trafic ne bascule qu'après
-le test de fumée ; en cas d'échec, la version précédente est
-redéployée. Seule la branche principale, relue et approuvée, est
-déployable ; la date reste fixée avec le client. Les évolutions du
-schéma de la base doivent rester compatibles avec la version
-précédente, pour qu'un retour arrière n'oblige pas à restaurer la base ;
-les documents ne décrivent pas ces évolutions, point à vérifier avec
-les Dev. Les précisions sur la charge, la restauration et les rôles
-Ansible viennent de retours d'expérience (section 2.1).
+version démarre à côté de l'ancienne, le trafic ne bascule qu'après le
+test de fumée, sinon la version précédente est redéployée. Seule la
+branche principale, relue et approuvée, est déployable ; la date reste
+fixée avec le client. Les évolutions du schéma de la base doivent rester
+compatibles avec la version précédente, pour qu'un retour arrière
+n'oblige pas à restaurer la base (non décrit dans les documents : à
+vérifier avec les Dev). Les précisions sur la charge, la restauration et
+les rôles Ansible viennent de retours d'expérience (section 2.1).
 
 **A4 – Remplacer les e-mails par des alertes et des tickets automatiques**
 
 - **VictoriaMetrics, Grafana et Alertmanager** déclenchent les alertes,
-  en complément ou à la place de l'outil actuel, non nommé (p. 8) ;
-  **GlitchTip** regroupe les erreurs de l'application.
+  avec ou à la place de l'outil actuel, non nommé (p. 8) ; **GlitchTip**
+  regroupe les erreurs de l'application ; **Uptime Kuma** vérifie la
+  disponibilité depuis l'extérieur.
 - Chaque alerte part par e-mail, en notification sur téléphone et
   ordinateur (**ntfy**) et en ticket **Jira**, avec le lien vers sa
-  procédure (A5) ; **PagerDuty** est une option en cas d'astreinte.
-- **Uptime Kuma** vérifie la disponibilité depuis l'extérieur.
-- Les retours entre équipes passent aussi par des tickets Jira.
-
-Ces outils sont hébergés hors du serveur de production, pour qu'une
-panne de celui-ci ne coupe pas aussi les alertes.
+  procédure (A5) ; **PagerDuty** est une option en cas d'astreinte. Les
+  retours entre équipes passent aussi par Jira.
+- Ces outils sont hébergés hors du serveur de production, pour qu'une
+  panne de celui-ci ne coupe pas aussi les alertes.
 
 **A5 – Garantir la reprise d'activité et partager les savoirs**
 
-Un **plan de reprise d'activité (PRA)** décrit comment redémarrer le
-service après un incident grave :
-
-- **pgBackRest** sauvegarde la base selon la règle 3-2-1 de la CNIL
-  (trois copies, deux supports, une hors ligne) : une copie part, chiffrée,
-  vers un stockage distant hébergé en Europe, que l'hébergeur ne peut pas
-  lire.
-- Ce qui est décrit en code se reconstruit (serveurs par Ansible, images
-  par la chaîne) ; le reste se sauvegarde (base, clés des secrets).
+- **Plan de reprise d'activité (PRA)** : **pgBackRest** sauvegarde la
+  base selon la règle 3-2-1 de la CNIL (trois copies, deux supports, une
+  hors ligne), dont une copie chiffrée, illisible par l'hébergeur, dans
+  un stockage distant en Europe. Ce qui est décrit en code se reconstruit
+  (serveurs par Ansible, images par la chaîne) ; le reste se sauvegarde
+  (base, clés des secrets).
 - La direction fixe la durée maximale d'interruption acceptable (DMIA)
   et la perte de données maximale admissible (PDMA), notions du guide du
-  SGDSN ; leurs valeurs viendront dans les spécifications techniques.
-- Restauration testée et exercice de reprise réguliers, comme le
-  recommande la CNIL ; la durée mesurée est comparée à la DMIA.
-- Hypothèse à vérifier : la préproduction « iso-production » pourrait
-  servir de production de secours ; sa capacité n'est pas documentée.
-
-Une **base documentaire** est tenue dans le dépôt et relue comme le
-code : déploiement et retour arrière, une procédure par alerte, PRA,
-décisions techniques et leur raison, guide d'arrivée. Elle remplace la
-procédure réécrite et envoyée par e-mail à chaque livraison
-(questionnaires Dev p. 5 et Ops p. 7). Pour la documentation générale de
-l'entreprise, le pôle Qualité pourrait utiliser **Confluence** (option).
+  SGDSN ; restauration et exercices de reprise réguliers, recommandés par
+  la CNIL, mesurent la durée réelle. Hypothèse à vérifier : la
+  préproduction « iso-production » pourrait servir de secours (capacité
+  non documentée).
+- **Base documentaire** dans le dépôt, relue comme le code : déploiement
+  et retour arrière, une procédure par alerte, PRA, décisions techniques,
+  guide d'arrivée. Elle remplace la procédure envoyée par e-mail à chaque
+  livraison (Dev p. 5, Ops p. 7). **Confluence** est une option pour la
+  documentation générale, portée par le pôle Qualité.
 
 ### 6.3 Justification des orientations
 
-**Alignement avec les besoins et avec un référentiel.** Chaque axe
-répond à un besoin de la section 5 (tableau de la section 6.1). Les axes
-couvrent aussi sept des dix risques de l'OWASP Top 10 CI/CD :
+**Alignement.** Chaque axe répond à un besoin de la section 5 (tableau
+6.1) ; ensemble, ils couvrent sept des dix risques de l'OWASP Top 10
+CI/CD :
 
 | Risque OWASP Top 10 CI/CD | Constat chez StarSail | Réponse |
 |---|---|---|
-| CICD-SEC-1 · contrôle du flux | Contrôles manuels, imposés par aucun outil (W4, W6) | Branche principale protégée et relue (A3) |
-| CICD-SEC-2 · identités et accès | Les Dev envoient eux-mêmes leurs images (W7) | Seule la chaîne écrit dans le registre (A2) |
-| CICD-SEC-3 · chaîne de dépendances | Dépendances non contrôlées (W7), Trivy piégé (T3) | Dependabot, Trivy, outils figés (A1) |
-| CICD-SEC-6 · hygiène des secrets | Gestion des secrets non prouvée (W7) | Gitleaks, secrets chiffrés (A1) |
+| CICD-SEC-1 · contrôle du flux | Contrôles manuels, non imposés (W4, W6) | Branche protégée et relue (A3) |
+| CICD-SEC-2 · identités et accès | Les Dev envoient leurs images (W7) | Seule la chaîne écrit au registre (A2) |
+| CICD-SEC-3 · dépendances | Non contrôlées (W7), Trivy piégé (T3) | Dependabot, outils figés (A1) |
+| CICD-SEC-6 · secrets | Gestion non prouvée (W7) | Gitleaks, secrets chiffrés (A1) |
 | CICD-SEC-8 · services tiers | Nouveaux services (GitHub, Jira) | Comptes nominatifs, droits minimaux (A1) |
-| CICD-SEC-9 · intégrité des artefacts | Images construites sur les postes, non signées (W1, W7) | Construction par la chaîne, Cosign (A2) |
-| CICD-SEC-10 · journalisation et visibilité | Trivy non suivi, retours par e-mail (W5, W3) | Dependency-Track, alertes, tickets (A1, A4) |
+| CICD-SEC-9 · intégrité des artefacts | Images faites sur les postes, non signées (W1, W7) | Chaîne et Cosign (A2) |
+| CICD-SEC-10 · visibilité | Trivy non suivi, e-mails (W5, W3) | Dependency-Track, alertes, tickets (A1, A4) |
 
-La nouvelle chaîne crée elle-même trois autres risques : code piégé
-exécuté par la chaîne (CICD-SEC-4), droits trop larges des étapes
-(CICD-SEC-5) et configuration non sécurisée (CICD-SEC-7). Sa
-configuration est donc relue comme le code et analysée par **zizmor** et
-**actionlint**, avec des droits minimaux.
-Le risque A03 de l'OWASP Top 10:2025 (T3) est traité par A1 et A2.
+Les trois autres risques naissent de la nouvelle chaîne : code piégé
+exécuté (CICD-SEC-4), droits trop larges (CICD-SEC-5), configuration non
+sécurisée (CICD-SEC-7). Sa configuration est donc relue comme le code et
+analysée par **zizmor** et **actionlint**, avec des droits minimaux. Le
+risque A03 de l'OWASP Top 10:2025 (T3) est traité par A1 et A2.
 
 **Faisabilité.** Les solutions prolongent ce que les équipes utilisent
-déjà (Docker, Ansible, Trivy, PHPUnit), avec des outils gratuits ou open
+(Docker, Ansible, Trivy, PHPUnit), avec des outils gratuits ou open
 source et une mise en place progressive. Seul abonnement : GitHub Team,
 environ 22 € (24 $) par mois pour six membres, nécessaire pour protéger
-la branche principale d'un dépôt privé. À prévoir aussi : une machine
-pour les outils auto-hébergés et un stockage distant des sauvegardes.
+une branche d'un dépôt privé ; à prévoir aussi une machine pour les
+outils auto-hébergés et un stockage distant des sauvegardes.
 
 **Impact attendu.** Chaque axe a un résultat mesurable : failles
 critiques en production (A1), part des images construites par la chaîne
-(A2), fréquence des mises en production, délai entre une modification et
-sa mise en production, taux d'échec (A3), délai de prise en charge d'une
-alerte (A4), durée réelle d'une reprise (A5) ; quatre sont des
-indicateurs DORA (O3). Les documents ne contiennent aucune mesure : les
-valeurs actuelles seront relevées avant tout changement, et les cibles
-fixées dans les spécifications techniques.
+(A2), fréquence, délai et taux d'échec des mises en production (A3),
+délai de prise en charge d'une alerte (A4), durée réelle d'une reprise
+(A5) ; quatre sont des indicateurs DORA (O3). Faute de mesure dans les
+documents, les valeurs actuelles seront relevées avant tout changement,
+et les cibles fixées dans les spécifications techniques.
 
-**Évolutions**, une fois leurs prérequis en place :
-
-- Kubernetes (K3s), demandé par les Ops, puis GitOps (Argo CD ou Flux),
-  quand les tests de charge auront mesuré le besoin ; l'occasion
-  d'étudier l'hébergement (serveurs actuels ou cloud européen, décrit
-  avec OpenTofu), en tenant compte du RGPD, StarMap traitant la position
-  de ses utilisateurs, et de la réversibilité.
-- Un plan de continuité d'activité (PCA) avec un second serveur ;
-  SonarQube Community Build (Cloud en option) ; OpenBao pour les
-  secrets ; MLflow et Evidently pour le modèle d'IA, hors périmètre.
+**Évolutions.** Kubernetes (K3s), demandé par les Ops, puis GitOps
+(Argo CD ou Flux), quand les tests de charge auront mesuré le besoin ;
+c'est aussi le moment d'étudier l'hébergement (serveurs actuels ou cloud
+européen, décrit avec OpenTofu), en tenant compte du RGPD, StarMap
+traitant la position de ses utilisateurs, et de la réversibilité.
+Viennent ensuite un plan de continuité d'activité (PCA) avec un second
+serveur, SonarQube Community Build (Cloud en option), OpenBao pour les
+secrets, et MLflow et Evidently pour le modèle d'IA, hors périmètre.
 
 ## Conclusion
 
