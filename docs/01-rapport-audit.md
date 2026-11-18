@@ -344,15 +344,128 @@ menaces.
 
 ## 5. Constats et besoins identifiés
 
-### 5.1 Problématique 1
+Les faiblesses de la section 4 sont d'abord classées selon leur impact
+sur la qualité, la sécurité et les délais. Le niveau est **élevé** quand
+le problème touche déjà la production ou peut exposer l'application, et
+**moyen** quand il cause des erreurs ou des retards sans exposition
+directe.
 
-### 5.2 Problématique 2
+| Faiblesse | Qualité | Sécurité | Délais | Niveau |
+|---|---|---|---|---|
+| W1 Images construites sur les postes | ✓ | ✓ | | élevé |
+| W2 Tag non respecté, erreurs de déploiement | ✓ | | ✓ | élevé |
+| W3 Relais et retours par e-mail, en retard | | | ✓ | moyen |
+| W4 Tests manuels, partiels et refaits deux fois | ✓ | | ✓ | moyen |
+| W5 Résultats de Trivy non suivis, CVE en production | | ✓ | | élevé |
+| W6 Mise en production manuelle avec coupure | ✓ | | ✓ | moyen |
+| W7 Aucune preuve de SAST, SCA, signature ni gestion des secrets | | ✓ | | élevé |
+| W8 Versions non inventoriées | | ✓ | | moyen |
+| W9 Savoirs portés par peu de personnes | | | ✓ | moyen |
 
-### 5.3 Problématique 3
+Les risques de sécurité sont classés de la même façon. La colonne
+« Nature » distingue ce qui est constaté dans les documents de ce
+qu'aucun élément fourni ne permet de vérifier.
 
-### 5.4 Problématique 4
+| Risque de sécurité | Nature | Impact |
+|---|---|---|
+| CVE dans l'image en production | constaté (questionnaires Dev p. 5, Ops p. 7) | élevé |
+| Analyse Trivy non automatisée, résultats non suivis | constaté (p. 3) | élevé |
+| Image construite sur un poste et non signée | constaté pour la construction (p. 3) ; non prouvé pour la signature | élevé |
+| Tag non maîtrisé | constaté (questionnaire Ops, p. 6-7) | élevé |
+| Absence d'analyse du code (SAST) et des dépendances (SCA) | non prouvé | élevé |
+| Gestion des secrets | non prouvé | élevé |
+| Droits sur le registre : les développeurs y envoient eux-mêmes leurs images | indice (schéma p. 8) | moyen |
+
+Ces constats sont regroupés en quatre problématiques, présentées par
+ordre de priorité.
+
+### 5.1 Problématique 1 – Les failles de sécurité sont découvertes trop tard et ne sont pas suivies
+
+**Constat.** Les Ops analysent chaque image avec Trivy avant de la
+déployer, mais les résultats ne sont intégrés à aucun outil de suivi
+(p. 3). Les deux équipes signalent pourtant des CVE dans l'image en
+production (questionnaires Dev p. 5 et Ops p. 7). Aucun élément ne montre
+d'analyse du code, des dépendances Composer et NPM, de signature des
+images ni de gestion des secrets (W7). Enfin, les versions utilisées ne
+sont pas inventoriées (W8).
+
+**Impact.** Sécurité, niveau élevé : des failles connues sont déjà
+présentes en production (T1), une brique peut avoir atteint sa fin de
+support sans que l'équipe le sache (T2), et la chaîne ne contrôle pas
+l'origine de ce qu'elle déploie (T3).
+
+**Besoin.** Détecter les failles du code, des dépendances et des images
+avant la mise en production, empêcher une faille critique connue
+d'atteindre la production, suivre chaque faille jusqu'à sa correction et
+connaître les versions utilisées.
+
+### 5.2 Problématique 2 – La construction et l'identification des images ne sont pas maîtrisées
+
+**Constat.** Les images Docker sont construites sur les postes des
+développeurs (p. 3), puis envoyées au registre avec une procédure écrite
+(questionnaire Dev, p. 5). Le tag de l'image est transmis aux Ops par
+e-mail (p. 3). Selon les Ops, le schéma de nommage « n'est pas toujours
+respecté », ce qui provoque « des incompréhensions et donc des erreurs au
+moment du déploiement » (questionnaire Ops, p. 6-7).
+
+**Impact.** Qualité et délais, niveau élevé : des erreurs de déploiement
+sont déjà constatées et doivent être corrigées. Sécurité : rien ne permet
+de vérifier que l'image déployée correspond au code validé, ni de
+déployer à coup sûr la bonne version (T4).
+
+**Besoin.** Construire les images de la même façon à chaque fois, à
+partir du code partagé, et les identifier sans ambiguïté, de la
+construction jusqu'à la production.
+
+### 5.3 Problématique 3 – Les tests et les mises en production sont manuels
+
+**Constat.** StarSail qualifie elle-même ses tests de « partiels » (p. 2).
+Ils sont lancés à la main (p. 2) et menés deux fois : par le client et
+les Dev sur l'environnement de démonstration, puis par les Ops en
+préproduction (questionnaires Dev p. 5 et Ops p. 7). Le niveau déclaré en
+Jest est « moyen » (p. 4). La mise en production est manuelle, sa date
+est fixée avec le client, et l'accès à l'application est coupé pendant
+l'opération (questionnaire Ops, p. 7). Les deux équipes échangent sur des
+bugs apparus au déploiement et sur la dernière version déployée
+(questionnaires Dev p. 5 et Ops p. 7).
+
+**Impact.** Qualité : des bugs passent jusqu'au déploiement et à la
+production. Délais : les tests doublés et la planification de chaque
+mise en production allongent la livraison. Disponibilité : chaque mise en
+production interrompt le service.
+
+**Besoin.** Des tests rejoués automatiquement à chaque modification, et
+une mise en production reproductible, sans interruption de service.
+
+### 5.4 Problématique 4 – Les retours passent par e-mail et les savoirs reposent sur peu de personnes
+
+**Constat.** Le tag, la procédure, les bugs, les erreurs 5xx et les
+alertes de sécurité circulent par e-mail, « souvent avec retard » (p. 3,
+questionnaire Ops p. 7). StarSail juge elle-même la communication Dev/Ops
+« perfectible » (p. 2). Le problème de nommage des images est signalé par
+les Ops dans une question réservée aux Dev (questionnaire Ops, p. 6).
+L'équipe Ops compte deux personnes, et l'automatisation côté Dev est
+confiée au stagiaire (questionnaires Dev p. 4 et Ops p. 6).
+
+**Impact.** Délais : les corrections attendent que le bon message soit
+lu. Qualité : une anomalie peut rester en production pendant ce temps.
+Organisation : le départ d'une personne ferait perdre une partie des
+savoirs (T5).
+
+**Besoin.** Faire arriver chaque alerte et chaque retour rapidement à la
+bonne personne, de façon traçable, et partager les savoirs entre les
+membres des équipes.
 
 ### 5.5 Autres constats
+
+- L'environnement de démonstration, utilisé avec le client, n'apparaît
+  pas sur le schéma d'infrastructure (questionnaire Dev p. 5, schéma
+  p. 8).
+- Le niveau déclaré en PostgreSQL est « moyen » dans les deux équipes
+  (p. 4 et p. 6).
+- Le pôle Qualité et Amélioration continue n'apparaît dans aucun des
+  cycles décrits (p. 2, p. 5, p. 7, p. 9).
+- L'outil de supervision de la production n'est pas nommé (schéma p. 8).
 
 ## 6. Recommandations stratégiques
 
