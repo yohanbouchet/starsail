@@ -118,22 +118,23 @@ développeurs. Les images Docker sont stockées dans un registre interne
 partagé et analysées avec Trivy avant chaque déploiement.
 
 Le tableau suivant reprend les technologies citées par les équipes, leur
-niveau déclaré dans les questionnaires et l'état de leur fin de support
-(source : endoflife.date, consulté le 17/11/2026).
+rôle dans la chaîne, leur niveau déclaré dans les questionnaires et l'état
+de leur fin de support (source : endoflife.date, consulté le 17/11/2026).
 
-| Technologie | Équipe | Niveau déclaré | Version documentée | Fin de support |
-|---|---|---|---|---|
-| PHP / Symfony | Dev | Très bon | « PHP 8 » ; Symfony non précisé | PHP 8.0 et 8.1 terminés ; 8.2 jusqu'au 31/12/2026 ; 8.3 à 8.5 maintenus |
-| TypeScript / Stimulus | Dev | Bon | non précisée | — |
-| Composer / NPM | Dev | Bon | non précisée | Node.js 22, 24 et 26 maintenus |
-| PHPUnit / Jest | Dev | Très bon / Moyen | non précisée | — |
-| Docker Compose / Docker | Dev / Ops | Moyen / Bon | non précisée | Docker Engine 29 maintenu ; 25.0 jusqu'au 04/12/2026 |
-| PostgreSQL | Dev et Ops | Moyen | non précisée | 14 terminé le 12/11/2026 ; 15 à 18 maintenus |
-| Debian | Ops | Bon | « stable » | 13 (stable) maintenue ; 12 en support étendu jusqu'au 30/06/2028 |
-| Bash / Ansible | Ops | Très bon / Bon | non précisée | — |
-| TestInfra / BashUnit | Ops | Bon | non précisée | — |
-| Trivy | Ops | non indiqué | non précisée | — |
-| Git, VS Code | Dev | non indiqué | — | — |
+| Technologie | Rôle dans la chaîne | Équipe | Niveau déclaré | Version documentée | Fin de support |
+|---|---|---|---|---|---|
+| PHP / Symfony | Langage et framework du backend | Dev | Très bon | « PHP 8 » ; Symfony non précisé | PHP 8.0 et 8.1 terminés ; 8.2 jusqu'au 31/12/2026 ; 8.3 à 8.5 maintenus |
+| TypeScript / Stimulus | Interface web (front-end) | Dev | Bon | non précisée | — |
+| Composer / NPM | Gestion des dépendances PHP et JavaScript | Dev | Bon | non précisée | Node.js 22, 24 et 26 maintenus |
+| PHPUnit / Jest | Tests unitaires et d'intégration | Dev | Très bon / Moyen | non précisée | — |
+| Docker Compose / Docker | Environnement de développement ; images et conteneurs en préproduction et en production | Dev / Ops | Moyen / Bon | non précisée | Docker Engine 29 maintenu ; 25.0 jusqu'au 04/12/2026 |
+| PostgreSQL | Base de données (catalogue d'étoiles) | Dev et Ops | Moyen | non précisée | 14 terminé le 12/11/2026 ; 15 à 18 maintenus |
+| Debian | Système des deux serveurs | Ops | Bon | « stable » | 13 (stable) maintenue ; 12 en support étendu jusqu'au 30/06/2028 |
+| Apt | Gestion des paquets des serveurs Debian | Ops | Bon | — | — |
+| Bash / Ansible | Configuration des serveurs et déploiement des conteneurs | Ops | Très bon / Bon | non précisée | — |
+| TestInfra / BashUnit | Tests d'infrastructure | Ops | Bon | non précisée | — |
+| Trivy | Analyse des failles (CVE) de l'image avant déploiement | Ops | non indiqué | non précisée | — |
+| Git, VS Code | Gestion des versions du code ; éditeur | Dev | non indiqué | — | — |
 
 ### 3.2 Processus de développement et déploiement
 
