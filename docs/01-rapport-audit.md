@@ -2,12 +2,21 @@
 
 Amélioration des pratiques DevOps — Projet StarMap
 
-> Statut : à rédiger (structure du modèle fourni par StarSail).
-
 ## Synthèse
 
-<!-- À rédiger en dernier : 4 constats et 4 recommandations triées par
-priorité, une demi-page. -->
+StarSail dispose d'un socle sain (conteneurs, Ansible, préproduction
+identique à la production), mais le chemin du code à la production est
+manuel, passe par e-mail et n'est pas tracé. Quatre problèmes en
+découlent : des failles découvertes trop tard (des CVE sont déjà en
+production), des images construites sur les postes et mal identifiées,
+des tests et des mises en production manuels avec coupure, des retours
+par e-mail et des savoirs portés par peu de personnes ; aucune
+sauvegarde n'est par ailleurs décrite. Cinq axes sont recommandés, par
+priorité : intégrer la sécurité dans la chaîne, automatiser la
+construction des images, automatiser les tests et la mise en
+production, remplacer les e-mails par des alertes et des tickets,
+garantir la reprise d'activité. Ils reposent sur des outils gratuits ou
+open source ; seul abonnement : GitHub Team, environ 22 € par mois.
 
 ## 1. Introduction et contexte
 
@@ -614,7 +623,8 @@ outils auto-hébergés et un stockage distant des sauvegardes.
 critiques en production (A1), part des images construites par la chaîne
 (A2), fréquence, délai et taux d'échec des mises en production (A3),
 délai de prise en charge d'une alerte (A4), durée réelle d'une reprise
-(A5) ; quatre sont des indicateurs DORA (O3). Faute de mesure dans les
+(A5) ; ceux de A3 font partie des cinq indicateurs DORA (O3). Faute de
+mesure dans les
 documents, les valeurs actuelles seront relevées avant tout changement,
 et les cibles fixées dans les spécifications techniques.
 
@@ -629,10 +639,94 @@ secrets, et MLflow et Evidently pour le modèle d'IA, hors périmètre.
 
 ## Conclusion
 
+L'audit montre des équipes compétentes et un socle technique sain,
+freinés par une chaîne de livraison manuelle et des échanges par
+e-mail. Les risques les plus urgents touchent la sécurité (failles en
+production, images non signées) et la reprise après une panne (aucune
+sauvegarde décrite, un seul serveur de production). Les cinq axes
+s'appuient sur l'existant et se mettent en place progressivement.
+Prochaine étape : les spécifications techniques du pipeline modernisé,
+qui préciseront l'architecture cible (diagramme TO-BE), les choix
+d'outils, le plan de migration par phases avec son retour arrière, et
+les indicateurs avec leur valeur actuelle et leur cible.
+
 ## Annexes
 
 ### Annexe A – Tableau de veille technologique
 
+Le tableau de veille est fourni à part (livrable 2,
+[fichier XLSX](../veille/tableau-de-veille.xlsx)) : 44 outils en dix
+catégories, comparés sur 17 critères, avec leur verdict et leurs
+sources. Sa feuille « Méthode et légende » explique les critères, les
+verdicts, le budget et les familles de licences.
+
 ### Annexe B – Glossaire
 
+| Terme | Définition |
+|---|---|
+| Artefact | Produit de la construction du code ; ici, l'image Docker. |
+| AS-IS, TO-BE | Fonctionnement actuel (« tel quel ») et fonctionnement visé. |
+| CI/CD | Intégration et livraison continues : chaîne automatique qui construit, teste et livre chaque modification du code. |
+| CVE | *Common Vulnerabilities and Exposures* : identifiant public d'une faille de sécurité connue. |
+| DevSecOps | Pratiques qui intègrent la sécurité à chaque étape de la chaîne DevOps. |
+| DMIA, PDMA | Durée maximale d'interruption acceptable ; perte de données maximale admissible (guide du SGDSN). |
+| DORA | *DevOps Research and Assessment* : programme de recherche qui définit cinq indicateurs de la livraison logicielle (délai entre une modification et sa mise en production, fréquence des déploiements, taux d'échec, temps de rétablissement après un déploiement raté, part des déploiements imprévus dus à un incident). |
+| GitOps | Déploiement piloté par un dépôt Git qui décrit l'état voulu ; un outil aligne l'infrastructure sur ce dépôt. |
+| OWASP | *Open Worldwide Application Security Project* : fondation qui publie des référentiels de sécurité, dont les « Top 10 ». |
+| PRA, PCA | Plan de reprise d'activité (redémarrer après un incident) ; plan de continuité d'activité (continuer pendant l'incident). |
+| Pull request | Proposition de modification du code, relue et approuvée avant d'être intégrée. |
+| Registre | Serveur qui stocke les images Docker. |
+| RGPD | Règlement général sur la protection des données (règlement européen 2016/679). |
+| Runner | Machine qui exécute les étapes de la chaîne CI/CD. |
+| SAST | *Static Application Security Testing* : analyse de sécurité du code source, sans l'exécuter. |
+| SBOM | *Software Bill of Materials* : inventaire des composants d'un logiciel. |
+| SCA | *Software Composition Analysis* : analyse des dépendances et de leurs failles connues. |
+| SWOT, TOWS | Forces, faiblesses, opportunités, menaces ; la matrice TOWS croise ces cases pour en tirer des stratégies. |
+| Tag | Étiquette qui identifie la version d'une image Docker. |
+| Test de fumée | Test rapide, juste après un déploiement, qui vérifie que l'application répond. |
+
 ### Annexe C – Sources et références
+
+**Documents fournis**
+
+- « Projet StarMap – Équipes et processus DevOps actuels » :
+  présentation, questionnaires Dev et Ops, schéma d'infrastructure,
+  cycle DevOps.
+- Modèle « Rapport d'audit et diagnostic ».
+
+**Référentiels et guides** (consultés du 17 au 18/11/2026)
+
+- OWASP Top 10:2025, A03 Software Supply Chain Failures :
+  <https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/>
+- OWASP Top 10 CI/CD Security Risks :
+  <https://owasp.org/www-project-top-10-ci-cd-security-risks/>
+- DORA, « DORA's software delivery performance metrics » :
+  <https://dora.dev/guides/dora-metrics/>
+- SGDSN, *Guide pour réaliser un plan de continuité d'activité*, 2013 :
+  <https://armement.defense.gouv.fr/sites/default/files/2022-04/20130612_NP_SGDSN_guide_pca.pdf>
+- CNIL, « Sauvegarder » : <https://www.cnil.fr/fr/securite-sauvegarder> ;
+  « Prévoir la continuité et la reprise d'activité » :
+  <https://cnil.fr/fr/securite-prevoir-la-continuite-et-la-reprise-dactivite>
+- RGPD, article 4 (CNIL) :
+  <https://www.cnil.fr/fr/reglement-europeen-protection-donnees/chapitre1>
+- H. Weihrich, « The TOWS Matrix – A Tool for Situational Analysis »,
+  *Long Range Planning*, vol. 15, n° 2, 1982, p. 54-66.
+
+**Faits datés**
+
+- Fins de support (endoflife.date, consulté le 17/11/2026) :
+  <https://endoflife.date/php>, <https://endoflife.date/postgresql>,
+  <https://endoflife.date/debian>, <https://endoflife.date/symfony>
+- Compromission de Trivy : CVE-2026-33634,
+  <https://www.cve.org/CVERecord?id=CVE-2026-33634> ; avis
+  GHSA-69fq-xp46-6x23,
+  <https://github.com/aquasecurity/trivy/security/advisories/GHSA-69fq-xp46-6x23>
+- Taux de change de la BCE du 17/11/2026 : <https://data.ecb.europa.eu/>
+
+**Outils** : la documentation officielle et la page de prix de chaque
+outil sont citées dans la colonne « Sources » du tableau de veille
+(annexe A), consultées le 18/11/2026.
+
+**Retours d'expérience de l'auditeur** : projets DataShare
+(<https://github.com/yohanbouchet/datashare>) et Orion
+(<https://github.com/yohanbouchet/orion>).
