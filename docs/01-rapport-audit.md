@@ -252,8 +252,8 @@ menaces.
 
 | | Utile | Nuisible |
 |---|---|---|
-| **Interne** | **Forces**<br>S1 Application conteneurisée, registre interne<br>S2 Préproduction identique à la production<br>S3 Analyse Trivy avant chaque déploiement<br>S4 Ansible et tests d'infrastructure<br>S5 Très bon niveau PHP/Symfony et PHPUnit<br>S6 Équipes coordonnées, démonstration au client, propositions d'outils<br>S7 Supervision de la production | **Faiblesses**<br>W1 Images construites sur les postes (F1)<br>W2 Nommage des images non respecté (F2)<br>W3 Relais et retours par e-mail, avec retard (F3, F7)<br>W4 Tests manuels, partiels et refaits deux fois (F5)<br>W5 Résultats de Trivy non suivis, CVE en production (F4)<br>W6 Mise en production manuelle avec coupure (F6)<br>W7 Aucune preuve de SAST, SCA, signature ni gestion des secrets<br>W8 Versions non inventoriées<br>W9 Savoirs portés par peu de personnes |
-| **Externe** | **Opportunités**<br>O1 Socle existant (Docker, Ansible, registre)<br>O2 Outils CI/CD et de sécurité gratuits ou open source<br>O3 Pratiques DevSecOps et indicateurs DORA<br>O4 Notifications et tickets automatiques<br>O5 Équipes demandeuses d'automatisation | **Menaces**<br>T1 Faille exploitée en production<br>T2 Fin de support d'une brique non inventoriée<br>T3 Attaque par la chaîne d'approvisionnement<br>T4 Déploiement d'une mauvaise version<br>T5 Départ d'une personne clé<br>T6 Perte de réactivité face à la concurrence |
+| **Interne** | **Forces**<br>S1 Application conteneurisée, registre interne<br>S2 Préproduction identique à la production<br>S3 Analyse Trivy avant chaque déploiement<br>S4 Ansible et tests d'infrastructure<br>S5 Très bon niveau PHP/Symfony et PHPUnit<br>S6 Équipes coordonnées, démonstration au client, propositions d'outils<br>S7 Supervision de la production | **Faiblesses**<br>W1 Images construites sur les postes (F1)<br>W2 Nommage des images non respecté (F2)<br>W3 Relais et retours par e-mail, avec retard (F3, F7)<br>W4 Tests manuels, partiels et refaits deux fois (F5)<br>W5 Résultats de Trivy non suivis, CVE en production (F4)<br>W6 Mise en production manuelle avec coupure (F6)<br>W7 Aucune preuve de SAST, SCA, signature ni gestion des secrets<br>W8 Versions non inventoriées<br>W9 Savoirs portés par peu de personnes<br>W10 Aucune sauvegarde décrite, un seul serveur de production |
+| **Externe** | **Opportunités**<br>O1 Socle existant (Docker, Ansible, registre)<br>O2 Outils CI/CD et de sécurité gratuits ou open source<br>O3 Pratiques DevSecOps et indicateurs DORA<br>O4 Notifications et tickets automatiques<br>O5 Équipes demandeuses d'automatisation | **Menaces**<br>T1 Faille exploitée en production<br>T2 Fin de support d'une brique non inventoriée<br>T3 Attaque par la chaîne d'approvisionnement<br>T4 Déploiement d'une mauvaise version<br>T5 Départ d'une personne clé<br>T6 Perte de réactivité face à la concurrence<br>T7 Perte du serveur de production |
 
 *Figure 2 – Matrice SWOT de la chaîne de livraison de StarMap.*
 
@@ -305,6 +305,9 @@ menaces.
   leur fin de support (section 3.1).
 - **W9** : l'équipe Ops compte deux personnes, et l'automatisation côté
   Dev est confiée au stagiaire (questionnaires Dev p. 4 et Ops p. 6).
+- **W10** : aucun élément fourni ne décrit de sauvegarde ni de
+  restauration de la base PostgreSQL, et la production dispose d'un seul
+  serveur (p. 2).
 
 ### 4.3 Opportunités
 
@@ -342,6 +345,8 @@ menaces.
   partie des savoirs nécessaires aux livraisons.
 - **T6** : des livraisons lentes et des coupures de service réduisent la
   réactivité de StarSail face à ses concurrents.
+- **T7** : la perte du serveur de production arrêterait le service ;
+  sans sauvegarde testée, des données pourraient être perdues.
 
 ## 5. Constats et besoins identifiés
 
@@ -362,8 +367,10 @@ directe.
 | W7 Aucune preuve de SAST, SCA, signature ni gestion des secrets | | ✓ | | élevé |
 | W8 Versions non inventoriées | | ✓ | | moyen |
 | W9 Savoirs portés par peu de personnes | | | ✓ | moyen |
+| W10 Aucune sauvegarde décrite, un seul serveur de production | | ✓ | ✓ | élevé |
 
-Les risques de sécurité sont classés de la même façon. La colonne
+Les risques de sécurité sont classés de la même façon. Ils couvrent la
+confidentialité, l'intégrité et la disponibilité des données. La colonne
 « Nature » distingue ce qui est constaté dans les documents de ce
 qu'aucun élément fourni ne permet de vérifier.
 
@@ -376,6 +383,7 @@ qu'aucun élément fourni ne permet de vérifier.
 | Absence d'analyse du code (SAST) et des dépendances (SCA) | non prouvé | élevé |
 | Gestion des secrets | non prouvé | élevé |
 | Droits sur le registre : les développeurs y envoient eux-mêmes leurs images | indice (schéma p. 8) | moyen |
+| Perte de données ou arrêt prolongé du service | constaté pour le serveur unique (p. 2) ; non prouvé pour la sauvegarde | élevé |
 
 Ces constats sont regroupés en quatre problématiques, présentées par
 ordre de priorité.
@@ -459,6 +467,16 @@ bonne personne, de façon traçable, et partager les savoirs entre les
 membres des équipes.
 
 ### 5.5 Autres constats
+
+**Sauvegarde et reprise (W10, T7).** Aucun élément fourni ne décrit de
+sauvegarde ni de restauration de la base PostgreSQL, et la production
+dispose d'un seul serveur (p. 2). Ce constat relève de l'exploitation
+plutôt que de la chaîne de livraison, mais son niveau est élevé : la
+perte de ce serveur arrêterait le service, et des données pourraient
+être perdues. **Besoin** : pouvoir restaurer les données et reprendre le
+service dans un délai connu.
+
+Les constats suivants sont secondaires :
 
 - L'environnement de démonstration, utilisé avec le client, n'apparaît
   pas sur le schéma d'infrastructure (questionnaire Dev p. 5, schéma
