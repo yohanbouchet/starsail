@@ -1,7 +1,7 @@
 # StarSail — audit DevOps et pipeline CI/CD modernisé
 
 > **Statut : en cours de rédaction** (rapport d'audit et tableau de
-> veille terminés ; spécifications techniques à rédiger).
+> veille terminés ; spécifications techniques en cours, section 1).
 
 Projet 7 du Master Expert DevOps d'OpenClassrooms : « Analysez une
 infrastructure et un stack technique et définissez des nouvelles
