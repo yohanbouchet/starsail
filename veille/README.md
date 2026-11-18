@@ -11,7 +11,7 @@ annexe A du rapport d'audit.
   compatibilité avec la stack, courbe d'apprentissage, effort d'adoption,
   avantages et inconvénients pour StarSail, retour d'expérience, verdict,
   sources.
-- **Verdicts** : 24 retenus, 3 en option, 7 en évolution, 10 écartés avec
+- **Verdicts** : 24 retenus, 3 en option, 8 en évolution, 9 écartés avec
   leur raison.
 - **Sources** consultées le 18/11/2026 : documentations officielles, pages
   de prix des éditeurs, API GitHub, endoflife.date. Prix convertis en
