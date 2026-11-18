@@ -4,6 +4,14 @@ Amélioration des pratiques DevOps — Projet StarMap
 
 Yohan Bouchet, Responsable DevOps · novembre 2026
 
+| Document | Rapport d'audit et diagnostic |
+|---|---|
+| Projet | StarMap, StarSail Inc. |
+| Version | 1.0 — pour validation |
+| Destinataire (validation) | Alyssa, Responsable Qualité et Amélioration Continue |
+| Documents liés | Tableau de veille technologique (annexe A) ; spécifications techniques du pipeline modernisé |
+| Diffusion | Interne StarSail |
+
 <!-- sommaire : inséré à cet endroit par le générateur de PDF -->
 
 ## Synthèse
