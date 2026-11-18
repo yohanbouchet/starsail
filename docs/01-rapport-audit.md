@@ -283,7 +283,8 @@ menaces.
   sans chaîne d'intégration continue (p. 3) ; leur contenu dépend donc du
   poste qui les a produites.
 - **W2** : le nommage (tag) des images « n'est pas toujours respecté »,
-  ce qui provoque des erreurs de déploiement (questionnaire Ops, p. 6-7).
+  ce qui « peut provoquer des incompréhensions et donc des erreurs au
+  moment du déploiement » (questionnaire Ops, p. 6-7).
 - **W3** : le travail et les retours (bugs, alertes de sécurité, erreurs)
   circulent par e-mail, « souvent avec retard » (p. 3) ; StarSail juge
   elle-même la communication Dev/Ops « perfectible » (p. 2).
@@ -353,7 +354,7 @@ directe.
 | Faiblesse | Qualité | Sécurité | Délais | Niveau |
 |---|---|---|---|---|
 | W1 Images construites sur les postes | ✓ | ✓ | | élevé |
-| W2 Tag non respecté, erreurs de déploiement | ✓ | | ✓ | élevé |
+| W2 Tag non respecté, risque d'erreurs de déploiement | ✓ | | ✓ | élevé |
 | W3 Relais et retours par e-mail, en retard | | | ✓ | moyen |
 | W4 Tests manuels, partiels et refaits deux fois | ✓ | | ✓ | moyen |
 | W5 Résultats de Trivy non suivis, CVE en production | | ✓ | | élevé |
@@ -405,13 +406,14 @@ connaître les versions utilisées.
 développeurs (p. 3), puis envoyées au registre avec une procédure écrite
 (questionnaire Dev, p. 5). Le tag de l'image est transmis aux Ops par
 e-mail (p. 3). Selon les Ops, le schéma de nommage « n'est pas toujours
-respecté », ce qui provoque « des incompréhensions et donc des erreurs au
-moment du déploiement » (questionnaire Ops, p. 6-7).
+respecté », ce qui « peut provoquer des incompréhensions et donc des
+erreurs au moment du déploiement » (questionnaire Ops, p. 6-7).
 
-**Impact.** Qualité et délais, niveau élevé : des erreurs de déploiement
-sont déjà constatées et doivent être corrigées. Sécurité : rien ne permet
-de vérifier que l'image déployée correspond au code validé, ni de
-déployer à coup sûr la bonne version (T4).
+**Impact.** Qualité et délais : un tag erroné peut faire déployer une
+mauvaise version, qu'il faut ensuite identifier et retirer (T4).
+Sécurité : rien ne permet de vérifier que l'image déployée correspond au
+code validé. Le niveau est élevé, car une mauvaise version peut atteindre
+la production.
 
 **Besoin.** Construire les images de la même façon à chaque fois, à
 partir du code partagé, et les identifier sans ambiguïté, de la
