@@ -103,7 +103,7 @@ config:
       bottom: 14
 ---
 flowchart TB
-  %% largeur-pdf: 78%
+  %% largeur-pdf: 72%
   subgraph DEV["Développement · postes des Dev"]
     direction LR
     D1["Code et tests locaux<br/><i>Docker Compose</i>"]
@@ -154,11 +154,10 @@ flowchart TB
 *Figure 1 – Pipeline cible de StarMap (TO-BE), à comparer avec le
 pipeline actuel (rapport d'audit, figure 1) ; pleine page en annexe A.*
 
-**Légende** : vert, étape automatique ; orange, étape manuelle ; orange
-arrondi à cadre épais, validation humaine obligatoire ; flèche pleine,
-passage à l'environnement suivant ; pointillés, retour automatique vers
-les équipes ; F1 à F7, point de friction de l'AS-IS supprimé par
-l'étape.
+**Légende** : vert, automatique ; orange, manuel ; orange arrondi à
+cadre épais, validation humaine obligatoire ; flèche pleine,
+environnement suivant ; pointillés, retour automatique ; F1 à F7,
+friction de l'AS-IS supprimée.
 
 Seules deux validations restent humaines : la relecture de la demande
 de fusion, puis la recette du client avant le tag de version. Sur des
@@ -166,10 +165,10 @@ dépôts privés, l'offre GitHub Team les impose : pas de fusion sans
 approbation ni contrôles réussis, production limitée aux tags de
 version, tags réservés aux Ops.
 
-Hypothèse H1, à valider avec les Dev (annexe E) : la recette finale du
-client se fait en préproduction, sur l'image qui ira en production ; la
-démonstration en cours de développement reste possible, mais son
-environnement n'est pas décrit (questionnaire Dev, p. 5).
+Hypothèse H1 (annexe E) : la recette finale du client se fait en
+préproduction, sur l'image qui ira en production ; la démonstration en
+cours de développement reste possible (environnement non décrit, Dev
+p. 5).
 
 ### 1.3 Description des étapes du pipeline
 
@@ -182,6 +181,12 @@ environnement n'est pas décrit (questionnaire Dev, p. 5).
 | **Déploiement** (préproduction : chaque fusion ; production : tag créé par un Ops) | Ansible, depuis le runner : vérifie la signature, démarre la nouvelle version à côté de l'ancienne (H3), lance le test de fumée, puis bascule ou revient à la version précédente ; en préproduction, Cypress, ZAP et, avant une version importante, k6 depuis une autre machine | Signature invalide ; test de fumée, de bout en bout ou ZAP en échec | A3 · F3, F5, F6 |
 | **Monitoring** (en continu) | VictoriaMetrics et Grafana (5xx, ressources, versions), GlitchTip (erreurs), Uptime Kuma (vue de l'extérieur) ; chaque alerte part en notification ntfy et en ticket Jira, avec sa procédure | — (seuils en section 4) | A4 · F7, W3 |
 | **Sauvegarde** (chaque nuit) | pgBackRest : sauvegarde chiffrée, copie hors site ; restauration testée en préproduction sur un volume représentatif | — | A5 · W10 |
+
+**Sécurité intégrée à la chaîne** : secrets hors du code et de l'image
+(secrets d'environnement, Ansible Vault), analyses SAST et SCA
+bloquantes, images signées puis vérifiées sur leur empreinte, droits
+minimaux (jeton en lecture seule, registre écrit par la chaîne seule) ;
+détail en 2.3.
 
 ## 2. Choix technologiques détaillés et justifiés
 
@@ -374,11 +379,10 @@ phase 0 avec les équipes, puis à comparer au temps passé en phase 1.
 
 ## 4. Critères d'évaluation et métriques de succès
 
-Les valeurs absentes des documents seront relevées en phase 0. Les
-cibles sont garanties par la chaîne, relatives à cette mesure, ou
-proposées puis validées par l'équipe concernée : DORA conseille de
-suivre la tendance de ses indicateurs plutôt que d'en faire des
-objectifs.
+Valeurs absentes des documents : relevées en phase 0. Cibles garanties
+par la chaîne, relatives à cette mesure ou proposées puis validées par
+l'équipe ; DORA conseille de suivre la tendance de ses indicateurs
+plutôt que d'en faire des objectifs.
 
 ### 4.1 Indicateurs de performance (KPIs)
 
@@ -418,9 +422,8 @@ cycles de livraison, jamais sur une semaine.
 
 ### 5.1 Responsabilités des équipes
 
-R réalise, A approuve (une seule personne), C est consulté, I est
-informé ; Dev : Sylvain, Romain, Jules ; Matthieu porte aussi la
-supervision.
+R réalise, A approuve (une seule personne), C consulté, I informé ;
+Dev : Sylvain, Romain, Jules ; Matthieu porte aussi la supervision.
 
 | Activité | Dev | Ops (Nico) | Sécurité (Matthieu) | Architecte (Lucas) | Resp. DevOps | Qualité (Alyssa) |
 |---|---|---|---|---|---|---|
@@ -479,15 +482,12 @@ annexe G ; la colonne « Sources » du tableau de veille complète la liste.
 
 Le pipeline proposé remplace une chaîne manuelle, relayée par e-mail,
 par une chaîne automatisée, tracée et sécurisée : chaque modification
-est construite, testée, analysée et signée avant la production, mise en
-production sans coupure, et chaque alerte devient un ticket ; dix
-indicateurs, relevés dès la phase 0, en mesureront les bénéfices.
-
-**Prochaines étapes** : valider ce document et son budget (environ
-45 € HT par mois), trancher les hypothèses H1 à H7, puis lancer la
-phase 0. **Facteurs clés de succès** : du temps réellement réservé aux
-équipes, une phase à la fois avec sa revue, des gains mesurés et
-partagés, et la sécurité traitée dès les premières phases.
+est construite, testée, analysée et signée, mise en production sans
+coupure, et chaque alerte devient un ticket ; dix indicateurs en
+mesureront les bénéfices. **Prochaines étapes** : valider ce document
+et son budget, trancher H1 à H7, lancer la phase 0. **Facteurs clés de
+succès** : du temps réservé aux équipes, une phase à la fois avec sa
+revue, des gains mesurés et partagés, la sécurité dès le début.
 
 ## Annexes
 
