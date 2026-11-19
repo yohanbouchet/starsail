@@ -297,11 +297,70 @@ formation sont chiffrés en section 5.3.
 
 ### 3.1 Phases de déploiement
 
+Six phases successives, chacune close par une revue qui décide du
+passage à la suivante (critères en 4.2). Charges estimées à trois
+points, tâche par tâche (méthode PERT, détail en annexe F) ; durées
+pour un jour-personne par jour ouvré, soit deux personnes à mi-temps
+(H7).
+
+| Phase | Objectif | Charge (durée) | Livrables | Pilotes |
+|---|---|---|---|---|
+| 0 Préparation | Mesurer les valeurs de départ, restaurer une sauvegarde, valider H1 à H7, placer les dépôts sur GitHub, installer le runner | 8,8 j-p (≈ 2 sem.) | Valeurs de départ, compte rendu de restauration, dépôts protégés | Responsable DevOps, Nico |
+| 1 Construction (A2) | Images construites, nommées et poussées par la chaîne seule ; tests existants rejoués | 8,6 j-p (≈ 2 sem.) | Workflows de construction, registre fermé aux postes | Lucas, Jules (encadré) |
+| 2 Sécurité (A1) | Analyses bloquantes, signature, inventaire des composants | 10,9 j-p (≈ 2 sem.) | Contrôles de sécurité, Dependency-Track en service | Matthieu |
+| 3 Alertes (A4) | Supervision hors production, alertes en notification et en ticket, une procédure par alerte | 11,5 j-p (≈ 2,5 sem.) | Tableaux de bord, règles d'alerte, procédures | Matthieu, Nico |
+| 4 Mise en production (A3) | Tests de bout en bout, déploiement automatique sans coupure, retour automatique | 25,8 j-p (≈ 5 sem.) | Préproduction automatique, première mise en production par tag | Romain, Nico, Lucas |
+| 5 Reprise et savoirs (A5) | PRA complet (DMIA et PDMA fixées par la direction), exercice de reprise, base documentaire | 10,5 j-p (≈ 2 sem.) | PRA testé, documentation relue | Nico, Alyssa |
+
+Total : environ 76 jours-personne, soit environ 16 semaines (de 8 à
+26 selon les cas optimiste et pessimiste) ; estimation à refaire en
+phase 0 avec les équipes, puis à comparer au temps passé en phase 1.
+
 ### 3.2 Prérequis techniques et organisationnels
+
+- **Techniques** : offre GitHub Team, règles des branches et des tags ;
+  runner sur une machine interne autre que la production (H6) ; machine
+  de supervision et stockage objet (2.5, 2.6) ; comptes nominatifs ;
+  secrets inventoriés et rangés ; clés de signature créées et
+  sauvegardées hors ligne.
+- **Organisationnels** : budget validé (2.7, 5.3) ; temps réservé dans
+  chaque équipe (H7) ; formations : GitHub Actions (tous), Cypress
+  (Dev), Molecule et pgBackRest (Ops), sécurité de la chaîne
+  (Matthieu) ; DMIA et PDMA fixées par la direction avant la phase 5.
+- **Migration des données** : historique Git transféré après un passage
+  de Gitleaks ; procédures envoyées par e-mail reprises dans la base
+  documentaire ; règles de supervision recréées. La base de production
+  ne change pas de serveur, mais une sauvegarde restaurée et vérifiée
+  précède chaque phase.
 
 ### 3.3 Identification des risques et mitigation
 
+| Id | Risque | Probabilité / impact | Parade | Responsable |
+|---|---|---|---|---|
+| R1 | Coupure pendant une bascule | moyenne / élevé | Préproduction d'abord, retour automatique, ancienne procédure gardée jusqu'à la phase 4 | Nico |
+| R2 | Surcharge, résistance au changement | moyenne / élevé | Une phase à la fois, pilotes nommés, formation, gains montrés | Alyssa |
+| R3 | Outil incompatible avec la stack | moyenne / moyen | Essai en préproduction, versions inventoriées (phase 0) | Lucas |
+| R4 | Migration de la base en échec | faible / élevé | Migrations compatibles, rejouées en préproduction, sauvegarde juste avant | Lucas |
+| R5 | Outil de la chaîne compromis (Trivy, mars 2026) | faible / élevé | Versions figées par empreinte, zizmor, droits minimaux | Matthieu |
+| R6 | Secret dans l'historique transféré | moyenne / élevé | Gitleaks sur tout l'historique, secrets trouvés remplacés | Matthieu |
+| R7 | Trop d'alertes, ignorées | moyenne / moyen | Seuils revus après deux semaines ; une alerte = une action | Matthieu |
+
 ### 3.4 Stratégie de rollback
+
+- **Chaque phase est réversible** : les nouveaux outils s'ajoutent à
+  côté de l'existant et chaque changement est un commit annulable ; la
+  revue de fin de phase sert de point de contrôle.
+- **Déploiement** : retour automatique à l'image précédente si le test
+  de fumée échoue ; sinon, on redéploie la version précédente, toujours
+  au registre avec la même empreinte.
+- **Données** : les migrations suivent la règle « étendre puis
+  réduire » : la version précédente du code fonctionne sur le nouveau
+  schéma, donc revenir au code précédent n'oblige pas à restaurer la
+  base. Si des données sont abîmées, pgBackRest restaure la base à
+  l'instant précédant la migration, grâce à l'archivage continu du
+  journal des transactions ; la perte reste bornée par la PDMA, et la
+  décision revient au responsable de la production. Une sauvegarde
+  vérifiée précède toute mise en production avec migration.
 
 ## 4. Critères d'évaluation et métriques de succès
 
@@ -405,6 +464,8 @@ flowchart TB
 | H3 | Un proxy inverse placé devant l'application permet de basculer le trafic d'une version à l'autre | Aucun proxy inverse décrit (schéma d'infrastructure, p. 8) | Nico | Phase 4 |
 | H4 | Les dépôts peuvent être placés sur GitHub | Hébergement actuel du code non décrit ; seul « Git » est cité (p. 4) | Lucas et Alyssa | Phase 0 |
 | H5 | Une machine de supervision hors du réseau de StarSail, en France, est acceptable (journaux et erreurs de l'application y sont stockés) ; une seule machine suffit à la charge de StarSail (Dependency-Track conseille une base dédiée en production) | Aucune règle d'hébergement ni volume de données décrits | Matthieu et Alyssa | Phase 3 |
+| H6 | Une machine du réseau interne, autre que le serveur de production, peut accueillir le runner | Seuls deux serveurs sont décrits (p. 2) | Nico | Phase 0 |
+| H7 | Deux personnes consacrent chacune la moitié de leur temps à la phase en cours | Disponibilité des équipes non décrite | Alyssa | Phase 0 |
 
 ### Annexe F – Supports de planification
 
@@ -434,3 +495,65 @@ quadrantChart
 qualitatives : l'impact suit le niveau des constats (rapport
 d'audit, section 5), l'effort celui des outils retenus (tableau de
 veille).*
+
+**Estimation des charges** (jours-personne ; O optimiste, M probable,
+P pessimiste ; PERT = (O + 4M + P) ÷ 6). Ces chiffres sont une première
+estimation, à refaire en phase 0 avec les équipes.
+
+| Phase | Tâche | O | M | P | PERT |
+|---|---|---|---|---|---|
+| 0 | Valeurs de départ des indicateurs | 1 | 2 | 4 | 2,2 |
+| 0 | Vérification des sauvegardes et restauration | 1 | 2 | 4 | 2,2 |
+| 0 | Validation des hypothèses H1 à H7 | 1 | 1 | 2 | 1,2 |
+| 0 | Dépôts sur GitHub (historique passé à Gitleaks), règles | 1 | 2 | 4 | 2,2 |
+| 0 | Runner auto-hébergé | 0,5 | 1 | 2 | 1,1 |
+| 1 | Workflow de construction, nommage, Hadolint | 2 | 3 | 6 | 3,3 |
+| 1 | Tests existants rejoués, couverture | 1 | 2 | 4 | 2,2 |
+| 1 | Registre fermé aux postes | 0,5 | 1 | 2 | 1,1 |
+| 1 | Atelier GitHub Actions, documentation | 1 | 2 | 3 | 2 |
+| 2 | Analyses bloquantes, tri des premiers résultats | 2 | 4 | 8 | 4,3 |
+| 2 | Dependabot | 0,5 | 1 | 2 | 1,1 |
+| 2 | Signature Cosign et vérification | 1 | 2 | 4 | 2,2 |
+| 2 | Machine de supervision, Dependency-Track | 2 | 3 | 6 | 3,3 |
+| 3 | VictoriaMetrics, vmagent, Grafana, Alertmanager | 2 | 4 | 7 | 4,2 |
+| 3 | GlitchTip dans l'application | 1 | 2 | 4 | 2,2 |
+| 3 | Uptime Kuma, ntfy, Jira | 1 | 2 | 3 | 2 |
+| 3 | Règles d'alerte et procédures | 2 | 3 | 5 | 3,2 |
+| 4 | Tests Cypress des parcours principaux | 5 | 8 | 15 | 8,7 |
+| 4 | ZAP et k6 | 1 | 2 | 4 | 2,2 |
+| 4 | Molecule sur tous les rôles | 3 | 5 | 10 | 5,5 |
+| 4 | Déploiement automatique sans coupure, retour automatique | 4 | 7 | 12 | 7,3 |
+| 4 | Migrations compatibles, testées | 1 | 2 | 4 | 2,2 |
+| 5 | PRA : DMIA, PDMA, sauvegardes chiffrées multiples | 2 | 3 | 6 | 3,3 |
+| 5 | Exercice de reprise | 1 | 2 | 3 | 2 |
+| 5 | Base documentaire, guide d'arrivée | 3 | 5 | 8 | 5,2 |
+| | **Total** | **40,5** | **71** | **132** | **76,1** |
+
+```mermaid
+---
+config:
+  gantt:
+    barHeight: 22
+    fontSize: 13
+    sectionFontSize: 13
+    leftPadding: 170
+---
+gantt
+  dateFormat YYYY-MM-DD
+  axisFormat S%V
+  tickInterval 1week
+  weekday monday
+  excludes weekends
+  section Phases
+  0 Préparation            :p0, 2027-01-04, 9d
+  1 Construction (A2)      :p1, after p0, 9d
+  2 Sécurité (A1)          :p2, after p1, 11d
+  3 Alertes (A4)           :p3, after p2, 12d
+  4 Mise en production (A3):p4, after p3, 26d
+  5 Reprise et savoirs (A5):p5, after p4, 11d
+  section En continu
+  Documentation au fil de l'eau :doc, 2027-01-04, 78d
+```
+
+*Figure 3 – Planning indicatif des phases, en semaines comptées depuis
+le début de la phase 0 (un jour-personne par jour ouvré, hypothèse H7).*
