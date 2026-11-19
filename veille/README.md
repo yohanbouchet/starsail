@@ -8,13 +8,15 @@ annexe A du rapport d'audit.
   alertes, sauvegarde, documentation, supervision du modèle d'IA.
 - **Critères** : besoin couvert (P1 à P4 et W10 du rapport), rôle pour
   StarSail, licence, coût, dernière version, maturité, communauté,
-  compatibilité avec la stack, courbe d'apprentissage, effort d'adoption,
+  score de sécurité OpenSSF Scorecard (indépendant), compatibilité avec
+  la stack, courbe d'apprentissage, effort d'adoption,
   avantages et inconvénients pour StarSail, retour d'expérience, verdict,
   sources.
 - **Verdicts** : 25 retenus, 4 en option, 8 en évolution, 9 écartés avec
   leur raison.
 - **Sources** consultées les 18 et 19/11/2026 : documentations
-  officielles, pages de prix des éditeurs, API GitHub, endoflife.date.
+  officielles, pages de prix des éditeurs, API GitHub, API OpenSSF
+  Scorecard, endoflife.date.
   Prix convertis en euros au taux de la BCE du 17/11/2026.
 
 La feuille « Méthode et légende » explique chaque critère, chaque verdict

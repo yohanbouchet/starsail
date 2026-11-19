@@ -688,7 +688,7 @@ les indicateurs avec leur valeur actuelle et leur cible.
 
 Le tableau de veille est fourni à part (livrable 2,
 [fichier XLSX](../veille/tableau-de-veille.xlsx)) : 46 outils en dix
-catégories, comparés sur 17 critères, avec leur verdict et leurs
+catégories, comparés sur 18 critères, avec leur verdict et leurs
 sources. Sa feuille « Méthode et légende » explique les critères, les
 verdicts, le budget et les familles de licences.
 
