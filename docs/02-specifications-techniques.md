@@ -7,7 +7,7 @@ Yohan Bouchet, Responsable DevOps · novembre 2026
 | Document | Spécifications techniques du pipeline modernisé |
 |---|---|
 | Projet | StarMap, StarSail Inc. |
-| Version | 1.0 — en cours de rédaction |
+| Version | 1.0 — pour validation |
 | Destinataire (validation) | Alyssa, Responsable Qualité et Amélioration Continue |
 | Relecture prévue | Lucas (architecture logicielle), Matthieu (sécurité et supervision), Nico (Ansible et déploiement) |
 | Documents de référence | Rapport d'audit et diagnostic, version 1.0 ; tableau de veille technologique |
