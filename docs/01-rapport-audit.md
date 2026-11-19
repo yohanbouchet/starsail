@@ -564,7 +564,7 @@ avec un compte nominatif sur chaque service.
 
 | Famille de tests | Solution | Moment |
 |---|---|---|
-| Unitaires, intégration, analyse statique | PHPUnit, Jest, PHPStan, Semgrep, ShellCheck | Chaque modification |
+| Unitaires, intégration, analyse statique | PHPUnit, Jest, PHPStan, ESLint, Semgrep, ShellCheck | Chaque modification |
 | Infrastructure | Molecule et TestInfra, sur tous les rôles Ansible | Chaque modification de l'infrastructure |
 | Bout en bout, sécurité en fonctionnement | Cypress, ZAP | Préproduction |
 | Charge | k6, depuis une autre machine que celle testée | Avant une version importante |
@@ -679,7 +679,7 @@ les indicateurs avec leur valeur actuelle et leur cible.
 ### Annexe A – Tableau de veille technologique
 
 Le tableau de veille est fourni à part (livrable 2,
-[fichier XLSX](../veille/tableau-de-veille.xlsx)) : 44 outils en dix
+[fichier XLSX](../veille/tableau-de-veille.xlsx)) : 46 outils en dix
 catégories, comparés sur 17 critères, avec leur verdict et leurs
 sources. Sa feuille « Méthode et légende » explique les critères, les
 verdicts, le budget et les familles de licences.
@@ -749,7 +749,7 @@ verdicts, le budget et les familles de licences.
 
 **Outils** : la documentation officielle et la page de prix de chaque
 outil sont citées dans la colonne « Sources » du tableau de veille
-(annexe A), consultées le 18/11/2026.
+(annexe A), consultées les 18 et 19/11/2026.
 
 **Retours d'expérience de l'auditeur** : projets DataShare
 (<https://github.com/yohanbouchet/datashare>) et Orion
