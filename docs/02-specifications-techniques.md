@@ -13,6 +13,24 @@ Yohan Bouchet, Responsable DevOps · novembre 2026
 | Documents de référence | Rapport d'audit et diagnostic, version 1.0 ; tableau de veille technologique |
 | Diffusion | Interne StarSail |
 
+## Synthèse
+
+Ce document décrit comment passer de la chaîne manuelle décrite dans le
+rapport d'audit à un pipeline CI/CD automatisé, sécurisé et mesuré pour
+StarMap. Le pipeline cible (section 1) construit, teste, analyse et
+signe chaque modification avec GitHub Actions, puis déploie avec Ansible
+sans coupure ; seules deux validations restent humaines. Les outils
+(section 2) sont open source, à une exception près (GitHub Team) : le
+coût est d'environ 45 € HT par mois, plus le stockage des sauvegardes.
+La migration (section 3) suit six phases réversibles : 76
+jours-personne estimés, soit environ 16 semaines si deux personnes y
+consacrent la moitié de leur temps. Dix indicateurs (section 4),
+relevés dès la phase 0, mesureront le résultat ; responsabilités et
+ressources figurent en section 5.
+
+**Décision attendue** : valider ce plan et son budget, trancher les
+hypothèses H1 à H7 (annexe E), puis lancer la phase 0.
+
 <!-- sommaire : inséré à cet endroit par le générateur de PDF -->
 
 ## 1. Architecture cible
@@ -538,9 +556,143 @@ flowchart TB
 
 ### Annexe B – Exemples de configuration
 
+Extrait illustratif du workflow GitHub Actions, sans prétention
+d'exhaustivité (Semgrep, Dependabot et la préproduction sont omis). Il
+suppose une étape « test » dans le Dockerfile et des outils installés
+sur le runner par Ansible, en versions figées. Les noms suivent la
+convention du code (anglais), les commentaires sont en français.
+
+```yaml
+# Fichier : .github/workflows/pipeline.yml (extrait illustratif)
+# Rôle    : construire, tester et analyser chaque modification ; publier
+#           et signer l'image après fusion ; déployer en production sur
+#           un tag de version
+name: pipeline
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+permissions: {}                     # aucun droit par défaut
+jobs:
+  build-test-scan:
+    name: Build, test and scan
+    if: github.ref_type != 'tag'    # une version n'est jamais reconstruite
+    concurrency:                    # une seule exécution par branche
+      group: build-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: [self-hosted, linux]   # runner interne (H6)
+    permissions:
+      contents: read
+    env:
+      IMAGE: ${{ vars.REGISTRY }}/starmap:${{ github.sha }}
+    steps:
+      # Action figée par l'empreinte de son commit (v7.0.1)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false  # jeton non conservé sur le disque
+      - name: Lint Dockerfile
+        run: hadolint Dockerfile
+      - name: Scan for secrets
+        run: gitleaks dir . --no-banner
+      # Étape « test » du Dockerfile : PHPUnit avec couverture
+      - name: Unit tests
+        run: |
+          docker build --target test --tag starmap-test .
+          docker run --rm starmap-test
+      - name: Build image
+        run: docker build --tag "$IMAGE" .
+      # Bloque si une faille critique ayant un correctif est trouvée
+      - name: Scan image
+        run: trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "$IMAGE"
+      # Après fusion seulement : seule la chaîne écrit dans le registre
+      - name: Push and sign
+        if: github.event_name == 'push'
+        env:
+          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          docker push "$IMAGE"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")
+          cosign sign --yes --key env://COSIGN_KEY "$digest"
+
+  deploy-production:
+    name: Deploy to production
+    if: github.ref_type == 'tag'    # tags réservés aux Ops (ruleset)
+    concurrency:                    # jamais deux déploiements à la fois
+      group: production
+      cancel-in-progress: false
+    runs-on: [self-hosted, linux]
+    environment: production         # secrets réservés à la production
+    permissions:
+      contents: read
+    env:
+      IMAGE: ${{ vars.REGISTRY }}/starmap:${{ github.sha }}
+      COSIGN_PUBLIC_KEY: ${{ vars.COSIGN_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Même image qu'en préproduction, vérifiée sur son empreinte
+      - name: Verify signature and deploy
+        run: |
+          docker pull "$IMAGE"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")
+          cosign verify --key env://COSIGN_PUBLIC_KEY "$digest"
+          ansible-playbook deploy.yml --extra-vars "image=$digest"
+```
+
+Vérification le 19/11/2026 : actionlint 1.7.12, aucune erreur ;
+zizmor 1.32.0, aucune alerte au niveau par défaut. Au niveau
+« auditeur », il signale le runner auto-hébergé (choix assumé, dépôt
+privé, H6) et la clé de signature utilisée hors d'un environnement
+dédié : à la mise en œuvre, ranger cette clé dans un environnement
+« registre » réservé à la branche `main`.
+
 ### Annexe C – Glossaire
 
+Termes propres à ce document ; les autres (CI/CD, CVE, DORA, GitOps,
+SAST, SBOM, SCA, runner, tag, test de fumée…) sont définis dans le
+glossaire du rapport d'audit (annexe B).
+
+| Terme | Définition |
+|---|---|
+| Couverture des tests | Part du code exécutée par les tests automatisés. |
+| DAST | *Dynamic Application Security Testing* : test de sécurité de l'application en fonctionnement (ici, ZAP). |
+| Empreinte (digest) | Identifiant calculé à partir du contenu d'une image : il change si un seul octet change, contrairement à un tag. |
+| Environnement GitHub | Cible de déploiement (préproduction, production) avec ses propres secrets et ses règles d'accès. |
+| « Étendre puis réduire » | Règle de migration de base : ajouter d'abord sans casser l'ancien code, ne retirer l'ancien schéma qu'à la version suivante. |
+| Jour-personne | Travail d'une personne pendant une journée. |
+| KPI | *Key Performance Indicator* : indicateur clé de performance. |
+| PERT | Estimation à trois points : (optimiste + 4 × probable + pessimiste) ÷ 6. |
+| Proxy inverse | Serveur placé devant l'application, qui reçoit le trafic et peut le basculer d'une version à l'autre. |
+| RACI | Matrice des responsabilités : réalise, approuve, consulté, informé. |
+| Restauration à un instant donné | Restauration d'une base telle qu'elle était à une date et une heure précises, grâce au journal des transactions. |
+| Retour arrière (rollback) | Retour à la version précédente après un échec. |
+| Ruleset | Règle GitHub qui protège des branches ou des tags (relecture, contrôles, création réservée). |
+| Signature d'image | Preuve cryptographique que l'image a été produite par la chaîne et n'a pas été modifiée (ici, Cosign). |
+| Test de bout en bout | Test qui reproduit le parcours d'un utilisateur dans l'application complète (ici, Cypress). |
+| Twelve-Factor App | Douze règles de conception d'une application facile à déployer (12factor.net). |
+| Workflow | Fichier qui décrit les tâches de la chaîne GitHub Actions et leurs déclencheurs. |
+
 ### Annexe D – Matrice de traçabilité
+
+Chaque constat du rapport d'audit (points de friction F et faiblesses W)
+est suivi jusqu'à sa solution, sa mesure et sa phase.
+
+| Constat (audit) | Problématique | Axe | Étape (1.3) | Outils (section 2) | Indicateur | Phase |
+|---|---|---|---|---|---|---|
+| F1 · W1 Images construites sur les postes | P2 | A2 | Build | GitHub Actions, Hadolint | K1, K2 | 1 |
+| F2 · W7 Images envoyées au registre par les Dev | P1, P2 | A1, A2 | Signature et registre | Cosign, registre fermé aux postes | K1 | 1, 2 |
+| F3 · W2, W3 Tag et procédure transmis par e-mail | P2, P4 | A2, A3 | Build (nommage), Déploiement | Nommage automatique, Ansible | K5, K6 | 1, 4 |
+| F4 · W5 Trivy manuel, résultats non suivis | P1 | A1 | Sécurité | Trivy, Dependency-Track | K3 | 2 |
+| F5 · W4 Tests manuels, refaits deux fois | P3 | A3 | Tests, Déploiement | PHPUnit, Jest, Cypress, ZAP, k6, Molecule | K4 | 1, 4 |
+| F6 · W6 Mise en production avec coupure | P3 | A3 | Déploiement | Ansible, test de fumée, Uptime Kuma | K7, K8 | 4 |
+| F7 · W3 Retours par e-mail | P4 | A4 | Monitoring | VictoriaMetrics, Grafana, GlitchTip, ntfy, Jira | K9 | 3 |
+| W7 SAST, SCA et secrets non prouvés | P1 | A1 | Sécurité | Semgrep, Gitleaks, Dependabot, zizmor | K3 | 2 |
+| W8 Versions non inventoriées | P1 | A1 | Sécurité | SBOM, Dependency-Track, Dependabot | K3 | 0, 2 |
+| W9 Savoirs portés par peu de personnes | P4 | A5 | Toutes | Base documentaire, ateliers | Critère de la phase 5 | 5 |
+| W10 Aucune sauvegarde, serveur unique | 5.5 de l'audit | A5 | Sauvegarde | pgBackRest, stockage objet | K10 | 0, 5 |
 
 ### Annexe E – Registre des hypothèses à valider
 
