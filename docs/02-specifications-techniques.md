@@ -134,21 +134,19 @@ flowchart TB
 ```
 
 *Figure 1 – Pipeline cible de StarMap (TO-BE), à comparer avec le
-pipeline actuel (rapport d'audit, figure 1) ; version pleine page en
-annexe A.*
+pipeline actuel (rapport d'audit, figure 1) ; pleine page en annexe A.*
 
-| Repère | Signification | Repère | Signification |
-|---|---|---|---|
-| Vert | Étape automatique | Flèche pleine | Passage à l'environnement suivant |
-| Orange | Étape manuelle | Flèche pointillée | Retour automatique vers les équipes |
-| Orange arrondi, cadre épais | Validation humaine obligatoire | F1 à F7 | Point de friction de l'AS-IS supprimé par l'étape |
+**Légende** : vert, étape automatique ; orange, étape manuelle ; orange
+arrondi à cadre épais, validation humaine obligatoire ; flèche pleine,
+passage à l'environnement suivant ; pointillés, retour automatique vers
+les équipes ; F1 à F7, point de friction de l'AS-IS supprimé par
+l'étape.
 
-Une modification passe d'un environnement à l'autre sans intervention,
-sauf aux deux validations humaines : la relecture de la demande de
-fusion, puis la recette du client avant le tag de version. Les dépôts
-étant privés, ces validations reposent sur les règles de l'offre GitHub
-Team : pas de fusion sans approbation ni contrôles réussis, production
-limitée aux tags de version, création de ces tags réservée aux Ops.
+Seules deux validations restent humaines : la relecture de la demande
+de fusion, puis la recette du client avant le tag de version. Sur des
+dépôts privés, l'offre GitHub Team les impose : pas de fusion sans
+approbation ni contrôles réussis, production limitée aux tags de
+version, tags réservés aux Ops.
 
 Hypothèse H1, à valider avec les Dev (annexe E) : la recette finale du
 client se fait en préproduction, sur l'image qui ira en production ; la
@@ -157,15 +155,15 @@ environnement n'est pas décrit (questionnaire Dev, p. 5).
 
 ### 1.3 Description des étapes du pipeline
 
-| Étape | Quand | Actions automatisées et outils | La chaîne s'arrête si… | Répond à |
-|---|---|---|---|---|
-| Build | Chaque demande de fusion ; fusion dans `main` | Image construite avec des dépendances figées (fichiers de verrouillage Composer et NPM), nommée avec la version et l'identifiant du commit ; Dockerfile vérifié par Hadolint | Construction en échec ; Dockerfile non conforme | A2 · F1, W2 |
-| Tests | Chaque demande de fusion | PHPUnit et Jest, avec mesure de la couverture ; PHPStan, ESLint et contrôle des types TypeScript, ShellCheck, actionlint ; migrations Doctrine rejouées sur une base de test (H2) ; Molecule sur chaque rôle Ansible modifié | Un test échoue ; la couverture baisse | A3 · W4 |
-| Sécurité | Chaque demande de fusion ; chaque nuit pour les versions en production | Semgrep (code), Gitleaks (secrets), Trivy (image), zizmor (workflows) ; inventaire des composants (SBOM) envoyé à Dependency-Track, qui signale les failles découvertes après coup ; Dependabot propose les mises à jour | Faille critique ayant un correctif ; secret détecté ; workflow dangereux | A1 · F4, W5, W7 |
-| Signature et registre | Fusion dans `main` | Cosign signe l'empreinte de l'image avec la clé de StarSail ; seule la chaîne écrit dans le registre | — | A2 · F2, W1 |
-| Déploiement | Préproduction : après chaque fusion. Production : tag de version créé par un Ops | Ansible, depuis le runner auto-hébergé : vérifie la signature, démarre la nouvelle version à côté de l'ancienne (H3), lance le test de fumée, puis bascule le trafic ou revient à la version précédente. En préproduction : Cypress, ZAP et, avant une version importante, k6 lancé depuis une autre machine | Signature invalide ; test de fumée, de bout en bout ou ZAP en échec | A3 · F3, F5, F6 |
-| Monitoring | En continu | VictoriaMetrics et Grafana (erreurs 5xx, ressources, mises en production marquées), GlitchTip (erreurs de l'application), Uptime Kuma (disponibilité vue de l'extérieur) ; chaque alerte part en notification ntfy et en ticket Jira, avec le lien vers sa procédure ; outils hébergés hors du serveur de production | — (alerte selon les seuils de la section 4) | A4 · F7, W3 |
-| Sauvegarde | Chaque nuit ; restauration testée régulièrement | pgBackRest : sauvegarde chiffrée, copie hors site ; restauration testée en préproduction sur un volume représentatif | — | A5 · W10 |
+| Étape (quand) | Actions automatisées et outils | La chaîne s'arrête si… | Répond à |
+|---|---|---|---|
+| **Build** (demande de fusion, fusion dans `main`) | Image construite avec des dépendances figées (verrouillage Composer et NPM), nommée avec la version et le commit ; Dockerfile vérifié par Hadolint | Construction en échec ; Dockerfile non conforme | A2 · F1, W2 |
+| **Tests** (demande de fusion) | PHPUnit et Jest avec couverture ; PHPStan, ESLint et types TypeScript, ShellCheck, actionlint ; migrations Doctrine rejouées (H2) ; Molecule sur chaque rôle Ansible modifié | Un test échoue ; la couverture baisse | A3 · W4 |
+| **Sécurité** (demande de fusion ; chaque nuit pour la production) | Semgrep (code), Gitleaks (secrets), Trivy (image), zizmor (workflows) ; inventaire des composants (SBOM) suivi par Dependency-Track ; Dependabot propose les mises à jour | Faille critique ayant un correctif ; secret ; workflow dangereux | A1 · F4, W5, W7 |
+| **Signature et registre** (fusion dans `main`) | Cosign signe l'empreinte de l'image avec la clé de StarSail ; seule la chaîne écrit dans le registre | — | A2 · F2, W1 |
+| **Déploiement** (préproduction : chaque fusion ; production : tag créé par un Ops) | Ansible, depuis le runner : vérifie la signature, démarre la nouvelle version à côté de l'ancienne (H3), lance le test de fumée, puis bascule ou revient à la version précédente ; en préproduction, Cypress, ZAP et, avant une version importante, k6 depuis une autre machine | Signature invalide ; test de fumée, de bout en bout ou ZAP en échec | A3 · F3, F5, F6 |
+| **Monitoring** (en continu) | VictoriaMetrics et Grafana (5xx, ressources, versions), GlitchTip (erreurs), Uptime Kuma (vue de l'extérieur) ; chaque alerte part en notification ntfy et en ticket Jira, avec sa procédure | — (seuils en section 4) | A4 · F7, W3 |
+| **Sauvegarde** (chaque nuit) | pgBackRest : sauvegarde chiffrée, copie hors site ; restauration testée en préproduction sur un volume représentatif | — | A5 · W10 |
 
 ## 2. Choix technologiques détaillés et justifiés
 
@@ -177,30 +175,31 @@ versions, licences, sources et retours d'expérience.
 
 ### 2.1 CI/CD
 
+Les trois sont compatibles avec la stack (indépendants du langage,
+runner sur Debian, déploiement par Ansible).
+
 | Critère | **GitHub Actions** (retenu) | GitLab CE auto-hébergé (écarté) | Jenkins (écarté) |
 |---|---|---|---|
-| Compatibilité | Indépendant du langage ; runner auto-hébergé sur Debian pour déployer avec Ansible | Identique | Identique |
-| Adoption | YAML ; service géré, aucun serveur de CI à maintenir | YAML, mais une forge complète à installer et maintenir | Serveur et extensions à maintenir |
-| Coût | Offre Team : environ 22 € (24 $) par mois pour six personnes ; runners auto-hébergés gratuits | Gratuit ; analyse des dépendances réservée à l'offre payante | Gratuit ; serveur à héberger |
-| Maturité, communauté | Runner MIT (v2.338.2) ; Dependabot intégré | Projet mûr, édition communautaire MIT | Très mûr (v2.591), très répandu |
-| Limite pour StarSail | Pas open source ; approbation d'un déploiement réservée à l'offre Enterprise, remplacée par des tags réservés aux Ops | Un serveur de plus pour deux Ops | Maintenance trop lourde pour deux Ops |
+| Adoption | YAML ; service géré, aucun serveur de CI | YAML, mais une forge à installer et maintenir | Serveur et extensions à maintenir |
+| Coût | Team : environ 22 € (24 $) par mois pour six personnes ; runners auto-hébergés gratuits | Gratuit ; analyse des dépendances payante | Gratuit ; serveur à héberger |
+| Maturité, communauté | Runner MIT (v2.338.2), Dependabot intégré | Mûr, édition communautaire MIT | Très mûr (v2.591), très répandu |
+| Limite pour StarSail | Pas open source ; approbation de déploiement réservée à Enterprise, remplacée par des tags réservés aux Ops | Un serveur de plus pour deux Ops | Maintenance trop lourde pour deux Ops |
 
-L'open source a été privilégié partout ailleurs ; ici, le service géré
-l'emporte, car l'équipe Ops ne compte que deux personnes. Le runner
-auto-hébergé, sur le réseau de StarSail, va chercher son travail chez
-GitHub : aucun serveur n'est ouvert sur Internet.
+L'open source est privilégié partout ailleurs ; ici, le service géré
+l'emporte, l'équipe Ops ne comptant que deux personnes. Le runner,
+interne, va chercher son travail chez GitHub : aucun serveur n'est
+ouvert sur Internet.
 
 ### 2.2 Tests
 
 PHPUnit et Jest, déjà utilisés, sont lancés par la chaîne avec mesure de
-la couverture. **Cypress** (MIT, gratuit sans son service en ligne)
-automatise les tests de bout en bout, à la demande des Dev (O5).
-**Molecule** (MIT) teste chaque rôle Ansible et prolonge TestInfra, que
-les Ops maîtrisent. **k6** (AGPL-3.0, gratuit en usage interne) mesure
-les temps de réponse avant une version importante ; la charge part d'une
-autre machine que le serveur testé, sinon la mesure est faussée (retour
-d'expérience). **Écarté** : Playwright, aussi complet, car les Dev ont
-demandé Cypress : l'adoption l'emporte.
+la couverture. **Cypress** (MIT) automatise les tests de bout en bout,
+à la demande des Dev (O5) ; **Molecule** (MIT) teste chaque rôle
+Ansible et prolonge TestInfra, maîtrisé par les Ops ; **k6** (AGPL-3.0,
+usage interne gratuit) mesure les temps de réponse, la charge partant
+d'une autre machine que le serveur testé (retour d'expérience).
+**Écarté** : Playwright, aussi complet, mais les Dev ont demandé
+Cypress.
 
 ### 2.3 Sécurité
 
@@ -229,16 +228,15 @@ demandé Cypress : l'adoption l'emporte.
 
 ### 2.4 Qualité du code
 
-Cinq analyseurs gratuits, sans serveur, lancés à chaque demande de
-fusion : **PHPStan** (MIT, extension Symfony) pour le PHP, **ESLint**
-avec typescript-eslint (MIT, projet mûr créé en 2013) et le contrôle
-des types du compilateur TypeScript pour le front, **ShellCheck** pour
-les scripts Bash des Ops, **Hadolint** pour les Dockerfile, **actionlint**
-pour les workflows. **Option** : oxlint, plus rapide et déjà utilisé
-dans un projet antérieur, mais plus récent (2023). SonarQube reste une
-évolution : l'édition gratuite n'analyse que la branche principale et
-ajoute un serveur ; l'offre en ligne devient payante au-delà de cinq
-membres et envoie le code chez un tiers.
+Analyseurs gratuits, sans serveur, à chaque demande de fusion :
+**PHPStan** (MIT, extension Symfony) pour le PHP, **ESLint** avec
+typescript-eslint (MIT, mûr, créé en 2013) et le contrôle des types
+TypeScript pour le front, **ShellCheck** (Bash), **Hadolint**
+(Dockerfile), **actionlint** (workflows). **Option** : oxlint, plus
+rapide, déjà utilisé dans un projet antérieur, mais récent (2023).
+**Évolution** : SonarQube (édition gratuite limitée à la branche
+principale, serveur de plus ; offre en ligne payante au-delà de cinq
+membres, code envoyé chez un tiers).
 
 ### 2.5 Monitoring et alertes
 
@@ -254,13 +252,12 @@ disponibilité depuis l'extérieur. Les alertes partent en notification
 **ntfy** (open source) et en ticket **Jira** (gratuit jusqu'à dix
 utilisateurs) ; **PagerDuty** est une option si une astreinte est créée.
 
-Ces outils tournent sur une machine virtuelle hors du réseau de
-StarSail, en France (OVHcloud, VPS-4 2027 : 8 cœurs virtuels, 24 Go de
-mémoire) : elle voit le service comme un client, reste joignable si la
-production tombe et reçoit les métriques envoyées par les serveurs
-(vmagent), sans port entrant chez StarSail. Ses accès sont protégés
-(HTTPS, comptes nominatifs). Dependency-Track, le plus gourmand (base
-PostgreSQL de 4 à 8 Go conseillée), fixe sa taille (hypothèse H5).
+Ces outils tournent hors du réseau de StarSail, sur une machine
+virtuelle en France (OVHcloud VPS-4 2027 : 8 cœurs, 24 Go, taille fixée
+par Dependency-Track, H5) : elle voit le service comme un client, reste
+joignable si la production tombe et reçoit les métriques envoyées par
+les serveurs (vmagent), sans port entrant ; accès en HTTPS, comptes
+nominatifs.
 
 ### 2.6 IaC, déploiement et sauvegarde
 
@@ -288,10 +285,8 @@ GitOps complet.
 | IaC et sauvegarde | Open source (GPL-3.0, MIT) | 0,007 € par Gio stocké (0,70 € pour 100 Gio) ; sortie gratuite | Ansible acquis ; pgBackRest à acquérir | Moyen |
 | **Total** | | **≈ 45 € par mois**, plus le stockage des sauvegardes | | |
 
-Prix du 19/11/2026 (catalogue public d'OVHcloud ; GitHub converti au
-taux de la BCE du 17/11/2026). Le volume des sauvegardes dépend de la
-taille de la base, à mesurer en phase 0 ; le temps des équipes et la
-formation sont chiffrés en section 5.3.
+Prix du 19/11/2026 (OVHcloud ; GitHub au taux BCE du 17/11/2026) ;
+volume des sauvegardes à mesurer en phase 0 ; temps des équipes en 5.3.
 
 ## 3. Plan de migration
 
@@ -318,20 +313,17 @@ phase 0 avec les équipes, puis à comparer au temps passé en phase 1.
 
 ### 3.2 Prérequis techniques et organisationnels
 
-- **Techniques** : offre GitHub Team, règles des branches et des tags ;
-  runner sur une machine interne autre que la production (H6) ; machine
-  de supervision et stockage objet (2.5, 2.6) ; comptes nominatifs ;
-  secrets inventoriés et rangés ; clés de signature créées et
-  sauvegardées hors ligne.
-- **Organisationnels** : budget validé (2.7, 5.3) ; temps réservé dans
-  chaque équipe (H7) ; formations : GitHub Actions (tous), Cypress
-  (Dev), Molecule et pgBackRest (Ops), sécurité de la chaîne
-  (Matthieu) ; DMIA et PDMA fixées par la direction avant la phase 5.
-- **Migration des données** : historique Git transféré après un passage
-  de Gitleaks ; procédures envoyées par e-mail reprises dans la base
-  documentaire ; règles de supervision recréées. La base de production
-  ne change pas de serveur, mais une sauvegarde restaurée et vérifiée
-  précède chaque phase.
+- **Techniques** : GitHub Team et règles des branches et des tags ;
+  runner interne hors production (H6) ; machine de supervision et
+  stockage objet ; comptes nominatifs ; secrets inventoriés ; clés de
+  signature sauvegardées hors ligne.
+- **Organisationnels** : budget validé ; temps réservé (H7) ;
+  formations (5.3) ; DMIA et PDMA fixées par la direction avant la
+  phase 5.
+- **Migration des données** : historique Git transféré après Gitleaks ;
+  procédures des e-mails reprises dans la base documentaire ; règles de
+  supervision recréées. La base reste sur son serveur, mais une
+  sauvegarde restaurée et vérifiée précède chaque phase.
 
 ### 3.3 Identification des risques et mitigation
 
@@ -364,25 +356,120 @@ phase 0 avec les équipes, puis à comparer au temps passé en phase 1.
 
 ## 4. Critères d'évaluation et métriques de succès
 
+Les valeurs absentes des documents seront relevées en phase 0. Les
+cibles sont garanties par la chaîne, relatives à cette mesure, ou
+proposées puis validées par l'équipe concernée : DORA conseille de
+suivre la tendance de ses indicateurs plutôt que d'en faire des
+objectifs.
+
 ### 4.1 Indicateurs de performance (KPIs)
+
+| Id | Indicateur (axe) | Valeur actuelle (source) | Cible | Mesure |
+|---|---|---|---|---|
+| K1 | Images construites par la chaîne (A2) | 0 % : pas d'intégration continue (p. 3) | 100 % dès la phase 1 | Registre, à chaque version |
+| K2 | Durée de la chaîne sur une demande de fusion (A2) | non mesurée (pas de chaîne) | < 10 min | GitHub Actions, chaque semaine |
+| K3 | Failles critiques avec correctif, en production (A1) | CVE en production (Dev p. 5, Ops p. 7) ; nombre non mesuré | aucune depuis plus de 7 jours (proposée) | Dependency-Track, chaque jour |
+| K4 | Couverture des tests (A3) | non mesurée ; tests « partiels » (p. 2) | mesurée dès la phase 1, jamais en baisse | Rapport de couverture, à chaque fusion |
+| K5 | Fréquence des mises en production (A3, DORA) | non mesurée | au moins doublée par rapport à la phase 0 | Tags GitHub, chaque mois |
+| K6 | Délai entre un commit et sa mise en production (A3, DORA) | non mesuré | divisé par deux par rapport à la phase 0 | Historique GitHub, chaque mois |
+| K7 | Taux d'échec des mises en production (A3, DORA) | non mesuré | au plus celui de la phase 0, puis en baisse | Retours arrière et correctifs urgents, chaque mois |
+| K8 | Coupure de service par mise en production (A3) | coupure à chaque mise en production (Ops p. 7) | 0 seconde | Uptime Kuma, à chaque version |
+| K9 | Délai de prise en charge d'une alerte critique (A4) | retours par e-mail « souvent avec retard » (p. 3) | < 30 min en heures ouvrées (proposée) | Jira, chaque mois |
+| K10 | Durée réelle d'une restauration (A5) | inconnue : aucune sauvegarde décrite | au plus la DMIA fixée par la direction | Exercice de reprise, chaque trimestre |
 
 ### 4.2 Critères d'acceptation par phase
 
+| Phase | La phase est réussie quand… |
+|---|---|
+| 0 | les valeurs de départ sont relevées, une restauration a réussi et a été chronométrée, H1 à H7 sont tranchées |
+| 1 | K1 vaut 100 % pendant deux semaines, K2 est sous 10 minutes, le registre est fermé aux postes |
+| 2 | toutes les images sont signées et vérifiées, les analyses bloquent, K3 est suivi chaque jour |
+| 3 | une alerte de test arrive en notification et en ticket avec sa procédure, même serveur de production arrêté |
+| 4 | trois mises en production ont eu lieu sans coupure, un retour arrière automatique a réussi en préproduction, tous les rôles Ansible sont testés |
+| 5 | un exercice de reprise dure au plus la DMIA ; la documentation est relue par une personne qui ne l'a pas écrite |
+
 ### 4.3 Méthode de suivi et reporting
+
+Un tableau de bord Grafana « Livraison », alimenté par l'historique de
+GitHub, réunit K1, K2 et K4 à K8 ; K3 vient de Dependency-Track, K9 de
+Jira, K10 des exercices. Revue chaque semaine en équipe, point mensuel
+d'une page avec Alyssa ; les indicateurs DORA se lisent sur plusieurs
+cycles de livraison, jamais sur une semaine.
 
 ## 5. Documentation de mise en place
 
 ### 5.1 Responsabilités des équipes
 
+R réalise, A approuve (une seule personne), C est consulté, I est
+informé ; Dev : Sylvain, Romain, Jules ; Matthieu porte aussi la
+supervision.
+
+| Activité | Dev | Ops (Nico) | Sécurité (Matthieu) | Architecte (Lucas) | Resp. DevOps | Qualité (Alyssa) |
+|---|---|---|---|---|---|---|
+| Conception de la chaîne, règles des branches | C | C | C | A | R | I |
+| Construction et tests | R | I | C | A | C | I |
+| Sécurité, secrets, droits | C | C | R | I | A | I |
+| Déploiement, infrastructure, sauvegarde | I | R | C | C | A | I |
+| Supervision et alertes | I | C | R | I | A | I |
+| Indicateurs et revues de phase | C | C | C | C | R | A |
+
 ### 5.2 Étapes clés de mise en production
+
+(1) **Préparer l'infrastructure** : GitHub, runner, supervision,
+stockage (phases 0 à 2) ; (2) **configurer les outils** : workflows,
+analyses, signature, alertes (1 à 3) ; (3) **tester la chaîne** en
+préproduction, retour arrière compris (4) ; (4) **déployer
+progressivement**, une phase à la fois ; (5) **former les équipes**, un
+atelier par phase ; (6) **mettre en production** : première version par
+tag, ancienne procédure retirée après la phase 4.
 
 ### 5.3 Ressources nécessaires
 
+- **Machines, licences, accès** : voir 2.7 et 3.2 ; droits revus à
+  chaque départ.
+- **Formation** : cinq ateliers internes d'une demi-journée (GitHub
+  Actions, Cypress, Molecule, pgBackRest, sécurité de la chaîne), menés
+  par les pilotes avec les parcours officiels (annexe G), sans frais
+  externes : environ 15 jours-personne pour six personnes.
+- **Temps et budget** : 91 jours-personne (76 de mise en place, 15 de
+  formation) ; 45 € HT par mois, plus le stockage (estimations).
+
 ### 5.4 Bonnes pratiques et points d'attention
+
+- **Secrets** : jamais dans le code, une image ou un e-mail ; Gitleaks à
+  chaque modification ; remplacés après un départ ou un incident.
+- **Branches** : branches courtes, fusionnées dans `main` par demande de
+  fusion relue et contrôlée ; versions publiées par des tags `vX.Y.Z`
+  réservés aux Ops.
+- **Retours arrière** : répétés en préproduction à chaque phase ;
+  migrations « étendre puis réduire » ; procédure écrite et liée à
+  l'alerte.
+- **Documentation continue** : dans le dépôt, relue par demande de
+  fusion et mise à jour dans le même commit que le changement (Docs as
+  Code) ; une procédure par alerte.
+- **Tout dans Git** : configuration hors de l'image (Twelve-Factor App,
+  facteur III), infrastructure et chaîne décrites en code et appliquées
+  par la chaîne seule (principes du GitOps).
 
 ### 5.5 Références vers documentation détaillée
 
+Les documentations officielles des outils retenus, les référentiels de
+méthode et les parcours de formation recommandés sont regroupés en
+annexe G ; la colonne « Sources » du tableau de veille complète la liste.
+
 ## Conclusion
+
+Le pipeline proposé remplace une chaîne manuelle, relayée par e-mail,
+par une chaîne automatisée, tracée et sécurisée : chaque modification
+est construite, testée, analysée et signée avant la production, mise en
+production sans coupure, et chaque alerte devient un ticket ; dix
+indicateurs, relevés dès la phase 0, en mesureront les bénéfices.
+
+**Prochaines étapes** : valider ce document et son budget (environ
+45 € HT par mois), trancher les hypothèses H1 à H7, puis lancer la
+phase 0. **Facteurs clés de succès** : du temps réellement réservé aux
+équipes, une phase à la fois avec sa revue, des gains mesurés et
+partagés, et la sécurité traitée dès les premières phases.
 
 ## Annexes
 
@@ -557,3 +644,46 @@ gantt
 
 *Figure 3 – Planning indicatif des phases, en semaines comptées depuis
 le début de la phase 0 (un jour-personne par jour ouvré, hypothèse H7).*
+
+### Annexe G – Références et formations
+
+Liens consultés le 19/11/2026.
+
+**Référentiels et méthodes** : OWASP Top 10 CI/CD
+<https://owasp.org/www-project-top-10-ci-cd-security-risks/> ;
+Twelve-Factor App <https://12factor.net/> ; OpenGitOps
+<https://opengitops.dev/> ; indicateurs DORA
+<https://dora.dev/guides/dora-metrics-four-keys/> ; Docs as Code
+<https://www.writethedocs.org/guide/docs-as-code/>.
+
+**Documentation des outils** :
+
+- GitHub Actions <https://docs.github.com/en/actions> ; environnements
+  <https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments> ;
+  rulesets
+  <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets> ;
+  Dependabot <https://docs.github.com/en/code-security/dependabot>
+- Semgrep <https://semgrep.dev/docs/> ; Cosign
+  <https://docs.sigstore.dev/cosign/signing/overview/> ; zizmor
+  <https://docs.zizmor.sh/> ; ZAP
+  <https://www.zaproxy.org/docs/docker/baseline-scan/> ;
+  Dependency-Track <https://dependencytrack.github.io/docs/>
+- Cypress <https://docs.cypress.io/> ; k6
+  <https://grafana.com/docs/k6/latest/> ; Molecule
+  <https://ansible.readthedocs.io/projects/molecule/> ; Ansible
+  <https://docs.ansible.com/>
+- VictoriaMetrics (vmagent)
+  <https://docs.victoriametrics.com/victoriametrics/vmagent/> ; GlitchTip
+  <https://glitchtip.com/documentation/install> ; pgBackRest
+  <https://pgbackrest.org/user-guide.html> ; migrations Symfony
+  <https://symfony.com/doc/current/doctrine.html>
+
+**Formations recommandées** (parcours officiels, support des ateliers de
+5.3) : GitHub Skills <https://skills.github.com/> ; Cypress
+<https://learn.cypress.io/> ; guides de Molecule, de pgBackRest et de
+zizmor (ci-dessus).
+
+**Prix** : catalogue public d'OVHcloud
+<https://api.ovh.com/1.0/order/catalog/public/vps?ovhSubsidiary=FR> ;
+offres GitHub <https://github.com/pricing> ; taux de change de la BCE
+<https://data.ecb.europa.eu/>.
