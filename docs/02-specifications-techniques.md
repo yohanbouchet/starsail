@@ -31,17 +31,17 @@ Six principes guident les choix :
    déploiements ; plus aucun tag ni procédure transmis par e-mail.
 2. **Construire une fois, déployer partout** : une seule image par
    version, construite par la chaîne, signée, puis promue sans
-   changement de la préproduction à la production ; la configuration et
-   les secrets restent hors de l'image (facteurs III, V et X de la
-   méthode Twelve-Factor App).
+   changement de la préproduction à la production ; configuration et
+   secrets restent hors de l'image (Twelve-Factor App, facteurs III, V
+   et X).
 3. **Intégrer la sécurité à chaque étape** : contrôles bloquants avant
    la production, secrets chiffrés, droits minimaux (OWASP Top 10
    CI/CD).
 4. **Tout décrire en code et le relire** : la chaîne, l'infrastructure
    et la documentation sont versionnées dans Git, et seule la chaîne
-   modifie les environnements. Ce sont les deux premiers principes du
-   GitOps (OpenGitOps) ; les deux autres, un agent qui applique en
-   continu l'état décrit, arriveront avec Kubernetes (évolution).
+   modifie les environnements : deux des quatre principes du GitOps
+   (OpenGitOps) ; l'application continue par un agent viendra avec
+   Kubernetes.
 5. **Avancer par étapes réversibles**, en partant des compétences
    existantes (Docker, Ansible, Trivy, PHPUnit) et d'outils gratuits ou
    open source, à la mesure du budget d'une scale-up.
@@ -63,33 +63,8 @@ retenus (tableau de veille, colonne « Effort d'adoption »).
 | 4 | **A4** Remplacer les e-mails par des alertes et des tickets | moyenne (W3) | moyen : machine de supervision | délai de prise en charge d'une alerte | 3 |
 | 5 | **A5** Garantir la reprise et partager les savoirs | élevée (W10), moyenne (W9) | faible (vérifier les sauvegardes) à moyen (PRA complet) | durée réelle d'une restauration | 0 et 5 |
 
-```mermaid
----
-config:
-  quadrantChart:
-    chartWidth: 460
-    chartHeight: 340
----
-quadrantChart
-  %% largeur-pdf: 45%
-  x-axis Effort faible --> Effort élevé
-  y-axis Impact moyen --> Impact élevé
-  quadrant-1 Projet important
-  quadrant-2 Gain rapide
-  quadrant-3 Amélioration simple
-  quadrant-4 Après les autres
-  A1 Sécurité: [0.3, 0.88]
-  A2 Images: [0.45, 0.8]
-  A5 Reprise: [0.4, 0.65]
-  A4 Alertes: [0.55, 0.35]
-  A3 Tests et MEP: [0.8, 0.4]
-```
-
-*Figure 1 – Matrice impact/effort des axes. Positions qualitatives :
-l'impact suit le niveau des constats, l'effort celui des outils
-retenus.*
-
-L'ordre des phases croise l'urgence, l'effort et les dépendances. A2
+L'ordre des phases croise l'urgence, l'effort (matrice impact/effort en
+annexe F) et les dépendances. A2
 ouvre la marche, car les contrôles de A1 et les tests de A3 s'exécutent
 dans la chaîne qu'il crée. La vérification des sauvegardes (A5)
 commence dès la phase 0 : elle ne dépend de rien et W10 est de niveau
@@ -158,7 +133,7 @@ flowchart TB
   class V1,V2 valid
 ```
 
-*Figure 2 – Pipeline cible de StarMap (TO-BE), à comparer avec le
+*Figure 1 – Pipeline cible de StarMap (TO-BE), à comparer avec le
 pipeline actuel (rapport d'audit, figure 1) ; version pleine page en
 annexe A.*
 
@@ -174,8 +149,6 @@ fusion, puis la recette du client avant le tag de version. Les dépôts
 étant privés, ces validations reposent sur les règles de l'offre GitHub
 Team : pas de fusion sans approbation ni contrôles réussis, production
 limitée aux tags de version, création de ces tags réservée aux Ops.
-L'image, identifiée par son empreinte, passe de la préproduction à la
-production sans être reconstruite.
 
 Hypothèse H1, à valider avec les Dev (annexe E) : la recette finale du
 client se fait en préproduction, sur l'image qui ira en production ; la
@@ -193,15 +166,6 @@ environnement n'est pas décrit (questionnaire Dev, p. 5).
 | Déploiement | Préproduction : après chaque fusion. Production : tag de version créé par un Ops | Ansible, depuis le runner auto-hébergé : vérifie la signature, démarre la nouvelle version à côté de l'ancienne (H3), lance le test de fumée, puis bascule le trafic ou revient à la version précédente. En préproduction : Cypress, ZAP et, avant une version importante, k6 lancé depuis une autre machine | Signature invalide ; test de fumée, de bout en bout ou ZAP en échec | A3 · F3, F5, F6 |
 | Monitoring | En continu | VictoriaMetrics et Grafana (erreurs 5xx, ressources, mises en production marquées), GlitchTip (erreurs de l'application), Uptime Kuma (disponibilité vue de l'extérieur) ; chaque alerte part en notification ntfy et en ticket Jira, avec le lien vers sa procédure ; outils hébergés hors du serveur de production | — (alerte selon les seuils de la section 4) | A4 · F7, W3 |
 | Sauvegarde | Chaque nuit ; restauration testée régulièrement | pgBackRest : sauvegarde chiffrée, copie hors site ; restauration testée en préproduction sur un volume représentatif | — | A5 · W10 |
-
-**Secrets.** Jamais dans le code ni dans l'image : ils sont rangés dans
-les secrets d'environnement de GitHub (ceux de la production ne sont
-accessibles qu'aux tâches qui la visent) et dans Ansible Vault. La clé
-de signature y est aussi ; Ansible garde la clé publique pour vérifier.
-
-**Droits.** Chaque workflow reçoit un jeton en lecture seule par défaut,
-élargi tâche par tâche ; le runner auto-hébergé ne sert qu'aux dépôts
-de StarSail.
 
 ## 2. Choix technologiques détaillés et justifiés
 
@@ -250,13 +214,16 @@ demandé Cypress : l'adoption l'emporte.
   mise en production. Écartés : Grype (doublon de Trivy), Renovate
   (inutile avec Dependabot).
 - **Secrets** : Gitleaks (MIT) les bloque dans le code ; ils sont rangés
-  dans les secrets d'environnement de GitHub et dans Ansible Vault.
+  dans les secrets d'environnement de GitHub (ceux de la production
+  réservés aux tâches qui la visent) et dans Ansible Vault.
   Évolution : OpenBao, coffre-fort trop lourd pour deux serveurs.
 - **Signature des images** : Cosign (Apache-2.0), avec une paire de clés
   de StarSail ; le mode « sans clé » écrirait le nom du dépôt privé, du
   workflow et du commit dans un journal public (Rekor).
-- **Droits de la chaîne** : zizmor (MIT) détecte droits excessifs,
-  actions non figées et déclencheurs dangereux (CICD-SEC-4, 5 et 7).
+- **Droits de la chaîne** : jeton de chaque workflow en lecture seule
+  par défaut ; runner réservé aux dépôts de StarSail ; zizmor (MIT)
+  détecte droits excessifs, actions non figées et déclencheurs dangereux
+  (CICD-SEC-4, 5 et 7).
 - **Application en fonctionnement (DAST)** : ZAP (Apache-2.0), à chaque
   déploiement en préproduction.
 
@@ -293,9 +260,7 @@ mémoire) : elle voit le service comme un client, reste joignable si la
 production tombe et reçoit les métriques envoyées par les serveurs
 (vmagent), sans port entrant chez StarSail. Ses accès sont protégés
 (HTTPS, comptes nominatifs). Dependency-Track, le plus gourmand (base
-PostgreSQL de 4 à 8 Go conseillée), fixe sa taille ; sa documentation
-recommande une base sur une machine dédiée en production, à prévoir si
-la charge augmente (hypothèse H5).
+PostgreSQL de 4 à 8 Go conseillée), fixe sa taille (hypothèse H5).
 
 ### 2.6 IaC, déploiement et sauvegarde
 
@@ -364,7 +329,7 @@ formation sont chiffrés en section 5.3.
 
 ### Annexe A – Diagramme détaillé des flux
 
-Version pleine page de la figure 2 (légende en section 1.2).
+Version pleine page de la figure 1 (légende en section 1.2).
 
 ```mermaid
 ---
@@ -439,4 +404,33 @@ flowchart TB
 | H2 | Le schéma de la base évolue par les migrations Doctrine, méthode documentée par Symfony | Gestion du schéma non décrite | Lucas | Phase 1 |
 | H3 | Un proxy inverse placé devant l'application permet de basculer le trafic d'une version à l'autre | Aucun proxy inverse décrit (schéma d'infrastructure, p. 8) | Nico | Phase 4 |
 | H4 | Les dépôts peuvent être placés sur GitHub | Hébergement actuel du code non décrit ; seul « Git » est cité (p. 4) | Lucas et Alyssa | Phase 0 |
-| H5 | Une machine de supervision hors du réseau de StarSail, en France, est acceptable (journaux et erreurs de l'application y sont stockés) ; une seule machine suffit à la charge de StarSail | Aucune règle d'hébergement ni volume de données décrits | Matthieu et Alyssa | Phase 3 |
+| H5 | Une machine de supervision hors du réseau de StarSail, en France, est acceptable (journaux et erreurs de l'application y sont stockés) ; une seule machine suffit à la charge de StarSail (Dependency-Track conseille une base dédiée en production) | Aucune règle d'hébergement ni volume de données décrits | Matthieu et Alyssa | Phase 3 |
+
+### Annexe F – Supports de planification
+
+```mermaid
+---
+config:
+  quadrantChart:
+    chartWidth: 460
+    chartHeight: 340
+---
+quadrantChart
+  %% largeur-pdf: 60%
+  x-axis Effort faible --> Effort élevé
+  y-axis Impact moyen --> Impact élevé
+  quadrant-1 Projet important
+  quadrant-2 Gain rapide
+  quadrant-3 Amélioration simple
+  quadrant-4 Après les autres
+  A1 Sécurité: [0.3, 0.88]
+  A2 Images: [0.45, 0.8]
+  A5 Reprise: [0.4, 0.65]
+  A4 Alertes: [0.55, 0.35]
+  A3 Tests et MEP: [0.8, 0.4]
+```
+
+*Figure 2 – Matrice impact/effort des axes (section 1.1). Positions
+qualitatives : l'impact suit le niveau des constats (rapport
+d'audit, section 5), l'effort celui des outils retenus (tableau de
+veille).*
