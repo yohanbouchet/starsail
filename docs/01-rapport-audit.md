@@ -82,6 +82,14 @@ description ; le modèle d'intelligence artificielle et le pôle R&D ;
 l'architecture de l'application (par exemple l'ajout d'un cache Redis) ;
 les processus internes du client.
 
+**Premières hypothèses.** À la première lecture des documents, cinq
+causes semblaient expliquer la plupart des difficultés : des images
+construites sur les postes, avec un tag transmis par e-mail ; l'absence
+d'intégration continue, qui fait découvrir bugs et CVE trop tard ; une
+mise en production manuelle, avec coupure ; des retours par e-mail ;
+des versions, secrets et droits non inventoriés. Les sections 3 à 5 les
+vérifient et les complètent.
+
 ## 2. Méthodologie d'audit
 
 ### 2.1 Sources d'information
